@@ -66,6 +66,11 @@ def add_slot_endpoint():
                 )
 
             result = booking_tennis(date, start_time, end_time, slot_type)
+            if 'Aucun créneau disponible' in result.get("message"):
+                return create_response(
+                    False,
+                    result.get("message")
+                )
             status = 'book' if result.get("isSuccess", False) else 'not_book'
             add_slot(date, start_time, end_time, slot_type, status)
 
