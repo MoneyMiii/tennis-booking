@@ -1,0 +1,90 @@
+tags:
+  - Booking Tennis
+
+consumes:
+  - application/json
+
+parameters:
+  - in: body
+    name: slot
+    description: "Détails du créneau à ajouter"
+    required: true
+    schema:
+      type: object
+      properties:
+        date:
+          type: string
+          description: "Date du créneau"
+          example: "2024-11-26"
+        start_time:
+          type: int
+          description: "Heure de début du créneau"
+          example: 9
+        end_time:
+          type: int
+          description: "Heure de fin du créneau"
+          example: 21
+        type:
+          type: string
+          description: "Type de court à réserver: indoor, outdoor or both"
+          example: "indoor"
+responses:
+  200:
+    description: "Réservation réussie"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Réservation réussie"
+
+  400:
+    description: "Erreur de réservation"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Erreur lors de la sélection du terrain" # Exemple d'erreur spécifique
+
+  404:
+    description: "Élément non trouvé"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "L'élément requis pour la réservation est introuvable, veuillez vérifier la disponibilité"
+
+  500:
+    description: "Erreur interne du serveur"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Erreur interne du serveur, veuillez réessayer plus tard." # Message générique pour les erreurs système
+
+  502:
+    description: "Erreur de serveur externe"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Erreur lors de la communication avec le service externe (par exemple, captcha ou authentification)"

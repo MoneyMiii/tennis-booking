@@ -1,0 +1,44 @@
+tags:
+  - Booking Tennis
+consumes:
+  - application/json
+parameters:
+  - in: body
+    name: slot
+    description: "Détails du créneau à ajouter"
+    required: true
+    schema:
+      type: object
+      properties:
+        date:
+          type: string
+          description: "Date du créneau"
+          example: "2024-11-26"
+        start_time:
+          type: int
+          description: "Heure de début du créneau"
+          example: 10
+        end_time:
+          type: int
+          description: "Heure de fin du créneau"
+          example: 11
+        type:
+          type: string
+          description: "Type de court à réserver: indoor, outdoor or both"
+          example: "indoor"
+responses:
+  200:
+    description: "Créneau ajouté avec succès"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Créneau ajouté"
+  400:
+    description: "Erreur lors de l'ajout du créneau"
+  500:
+    description: "Erreur interne du serveur"

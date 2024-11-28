@@ -1,0 +1,44 @@
+tags:
+  - Booking Tennis
+produces:
+  - application/json
+responses:
+  200:
+    description: "Liste des créneaux disponibles"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        slots:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "Identifiant du créneau"
+                example: "58630af8-2da0-46e2-ba1b-fadefe19eba0"
+              date:
+                type: string
+                description: "Date du créneau"
+                example: "2024-11-26"
+              start_time:
+                type: int
+                description: "Heure de début du créneau"
+                example: 10
+              end_time:
+                type: int
+                description: "Heure de fin du créneau"
+                example: 11
+              type:
+                type: string
+                description: "Type de court à réserver: indoor, outdoor or both"
+                example: "indoor"
+              status:
+                type: string
+                description: "Statut du court à réserver: book, not_book or waiting"
+                example: "waiting"
+  500:
+    description: "Erreur interne du serveur"

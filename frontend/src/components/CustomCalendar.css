@@ -1,0 +1,13 @@
+.calendar-container {
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.rbc-calendar {
+  position: relative;
+  z-index: 1;
+}
+
+.rbc-allday-cell {
+  display: none;
+}

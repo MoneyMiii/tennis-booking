@@ -1,0 +1,28 @@
+tags:
+  - Booking Tennis
+consumes:
+  - application/json
+parameters:
+  - in: path
+    name: id
+    description: "Identifiant du créneau à supprimer"
+    required: true
+    type: string
+    format: uuid
+    example: "123e4567-e89b-12d3-a456-426614174000"
+responses:
+  200:
+    description: "Créneau supprimé avec succès"
+    schema:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Créneau supprimé"
+  400:
+    description: "Créneau introuvable"
+  500:
+    description: "Erreur interne du serveur"

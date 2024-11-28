@@ -1,0 +1,16 @@
+tags:
+  - Booking Tennis
+consumes:
+  - application/json
+responses:
+  200:
+    description: Message de bienvenue indiquant que l'API est opérationnelle
+    schema:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Bienvenue sur l'API de réservation de tennis, l'API fonctionne correctement."
+    examples:
+      application/json:
+        message: "Bienvenue sur l'API de réservation de tennis, l'API fonctionne correctement."
