@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import { addSlot, deleteSlot, getSlots } from "./api/api";
-import CustomCalendar from "./components/CustomCalendar";
-import Loader from "./components/Loader";
-import ModalAddComponent from "./components/ModalAddComponent";
-import ModalDeleteComponent from "./components/ModalDeleteComponent";
-import ModalErrorComponent from "./components/ModalErrorComponent";
+import CustomCalendar from "./components/customCalendar/CustomCalendar";
+import Loader from "./components/loader/Loader";
+import ModalAddComponent from "./components/modals/ModalAddComponent";
+import ModalDeleteComponent from "./components/modals/ModalDeleteComponent";
+import ModalErrorComponent from "./components/modals/ModalErrorComponent";
 import { useLoader } from "./contexts/loaderContext";
 import { Slot } from "./types/types";
 
@@ -26,16 +26,14 @@ const App: React.FC = () => {
 
   const fetchSlots = useCallback(async () => {
     setLoading(true);
-    try {
-      const slotsFromApi = await getSlots();
-      setSlots(slotsFromApi);
-    } catch (error: any) {
-      setErrorMessage(
-        "Une erreur est survenue lors de la récupération des créneaux."
-      );
-    } finally {
-      setLoading(false);
-    }
+    getSlots()
+      .then((slots) => {
+        setSlots(slots);
+      })
+      .catch((err: { isSuccess: boolean; message: string }) =>
+        setErrorMessage(err?.message)
+      )
+      .finally(() => setLoading(false));
   }, [setLoading]);
 
   useEffect(() => {
@@ -64,22 +62,18 @@ const App: React.FC = () => {
   const handleConfirm = async () => {
     if (selectedSlot && courtType) {
       setLoading(true);
-      try {
-        await addSlot(
-          selectedSlot.start.toISOString().split("T")[0],
-          selectedSlot.start.getHours(),
-          selectedSlot.end.getHours(),
-          courtType
-        );
-        setIsModalOpen(false);
-        await fetchSlots();
-      } catch (error) {
-        setErrorMessage(
-          "Une erreur est survenue lors de l'ajout de l'événement."
-        );
-      } finally {
-        setLoading(false);
-      }
+      setIsModalOpen(false);
+      addSlot(
+        selectedSlot.start.toISOString().split("T")[0],
+        selectedSlot.start.getHours(),
+        selectedSlot.end.getHours(),
+        courtType
+      )
+        .then(() => fetchSlots())
+        .catch((err: { isSuccess: boolean; message: string }) => {
+          setErrorMessage(err?.message);
+        })
+        .finally(() => setLoading(false));
     }
   };
 
@@ -91,17 +85,14 @@ const App: React.FC = () => {
   const handleConfirmDelete = async () => {
     if (slotToDelete) {
       setLoading(true);
-      try {
-        await deleteSlot(slotToDelete.id);
-        setIsDeleteModalOpen(false);
-        await fetchSlots();
-      } catch (error) {
-        setErrorMessage(
-          "Une erreur est survenue lors de la suppression de l'événement."
-        );
-      } finally {
-        setLoading(false);
-      }
+      setIsDeleteModalOpen(false);
+      deleteSlot(slotToDelete.id)
+        .then(() => fetchSlots())
+        .catch((err: { isSuccess: boolean; message: string }) => {
+          console.log(err);
+          setErrorMessage(err?.message);
+        })
+        .finally(() => setLoading(false));
     }
   };
 

@@ -18,7 +18,6 @@ export const getSlots = async () => {
     }
 
     const data = await response.json();
-
     if (data.isSuccess) {
       return data.data.map((slot: SlotApi) => convertSlotApiToSlot(slot));
     } else {

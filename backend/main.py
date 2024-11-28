@@ -18,7 +18,7 @@ init_db()
 def create_response(is_success, message, data=None, status_code=200):
     response = {"isSuccess": is_success, "message": message}
     if data is not None:
-        response["data"] = data
+        response["data"] = data['data']
     return jsonify(response), status_code
 
 
@@ -54,7 +54,7 @@ def add_slot_endpoint():
                 return create_response(False, "Erreur lors de l'ajout du créneau", status_code=500)
         else:
             slots = get_slots_by_date_and_status(slot_date, 'book')
-            if len(slots) > 0:
+            if len(slots['data']) > 0:
                 return create_response(
                     False,
                     f"Un créneau avec le statut 'book' existe déjà pour la date {

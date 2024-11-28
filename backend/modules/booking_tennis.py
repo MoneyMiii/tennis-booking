@@ -413,11 +413,11 @@ def booking_tennis(date, start_time, end_time, court_type):
             click_search_button(driver)
             click_first_booking_button(driver)
             solve_captcha(driver)
-            go_to_add_partenaire(driver)
-            add_partenaire(driver)
-            select_payment_formule(driver)
-            pay_by_card(driver)
-            complete_card_data(driver)
+            # go_to_add_partenaire(driver)
+            # add_partenaire(driver)
+            # select_payment_formule(driver)
+            # pay_by_card(driver)
+            # complete_card_data(driver)
 
             return {"isSuccess": True, "message": "Booking successful."}
 

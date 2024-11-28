@@ -10,8 +10,8 @@ import { Calendar, momentLocalizer } from "react-big-calendar";
 import {
   convertSlotCalendarToSlot,
   convertSlotToSlotCalendar
-} from "../mappers/mappers";
-import { Slot, SlotCalendar } from "../types/types";
+} from "../../mappers/mappers";
+import { Slot, SlotCalendar } from "../../types/types";
 
 moment.locale("fr");
 const localizer = momentLocalizer(moment);
