@@ -1,2 +1,4 @@
 .env
 slots.db
+*.pyc
+__pycache__/
