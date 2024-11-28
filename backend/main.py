@@ -47,6 +47,9 @@ def add_slot_endpoint():
         current_date = datetime.now().date()
         slot_date = datetime.strptime(date, "%Y-%m-%d").date()
 
+        if slot_date < current_date:
+            return create_response(False, "Impossible d'ajouter un créneau pour une date passée", status_code=400)
+
         if slot_date >= current_date + timedelta(days=7):
             if add_slot(date, start_time, end_time, slot_type, 'waiting'):
                 return create_response(True, "Créneau ajouté avec le statut 'waiting'")

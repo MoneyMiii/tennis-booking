@@ -168,14 +168,23 @@ def click_search_button(driver):
         raise RuntimeError(
             "Erreur : Le bouton de recherche n'a pas pu être cliqué dans le délai imparti.")
 
+def is_element_found(driver):
+    """Retourne True si l'élément est trouvé, sinon False."""
+    try:
+        WebDriverWait(driver, 3).until(
+            EC.presence_of_all_elements_located(
+                (By.CLASS_NAME, 'no_result'))
+        )
+        return True
+    except TimeoutException:
+        return False
+
 
 def click_first_booking_button(driver):
     """Clique sur le premier bouton pour réserver un créneau de tennis après la recherche."""
     try:
-        WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located(
-                (By.CLASS_NAME, 'search-result-block'))
-        )
+        if not is_element_found:
+            raise RuntimeError("Erreur : Aucun créneau disponible avec les filtres choisis.")
 
         first_booking_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'search-result-block')]//div[contains(@class, 'row tennis-court')]//button[contains(@class, 'btn')]")
@@ -413,11 +422,11 @@ def booking_tennis(date, start_time, end_time, court_type):
             click_search_button(driver)
             click_first_booking_button(driver)
             solve_captcha(driver)
-            # go_to_add_partenaire(driver)
-            # add_partenaire(driver)
-            # select_payment_formule(driver)
-            # pay_by_card(driver)
-            # complete_card_data(driver)
+            go_to_add_partenaire(driver)
+            add_partenaire(driver)
+            select_payment_formule(driver)
+            pay_by_card(driver)
+            complete_card_data(driver)
 
             return {"isSuccess": True, "message": "Booking successful."}
 
