@@ -2,6 +2,9 @@
   "name": "calendrier-reservation",
   "version": "0.1.0",
   "private": true,
+  "description": "Application de réservation de calendrier pour les courts de tennis.",
+  "author": "Votre Nom",
+  "main": "src/electron/electron.js",
   "dependencies": {
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^13.0.0",
@@ -22,9 +25,11 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "cross-env PUBLIC_URL=. react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron": "electron ./src/electron/electron.js",
+    "electron-builder": "electron-builder"
   },
   "eslintConfig": {
     "extends": [
@@ -46,6 +51,32 @@
   },
   "devDependencies": {
     "@types/react-big-calendar": "^1.16.0",
-    "@types/react-modal": "^3.16.3"
+    "@types/react-modal": "^3.16.3",
+    "asar": "^3.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.tennis.booking",
+    "productName": "Tennis Booking",
+    "files": [
+      "src/electron/**/*",
+      "build/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "extraMetadata": {
+      "main": "src/electron/electron.js"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "public/tennis.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/tennis.ico"
+    }
   }
 }

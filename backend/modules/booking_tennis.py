@@ -12,6 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
 from modules.gpt_capcha_model import solve_capcha_with_gpt
 from typesForFilters.court_type_enum import CourtType
+import locale
 
 
 def setup_driver():
@@ -60,26 +61,29 @@ def navigate_to_tennis_page(driver):
 
 def select_location_and_time(driver, date):
     """Sélectionne l'emplacement et l'heure du créneau."""
+    # locale.setlocale(locale.LC_TIME, 'fr_FR.UTF-8')  # Sur Linux/Mac
+    # Sur Windows, essayez cette ligne si la précédente échoue
+    locale.setlocale(locale.LC_TIME, 'fr_FR')
+
     try:
         date_obj = datetime.strptime(date, '%Y-%m-%d')
-        day = date_obj.day
-
+        formatted_date = date_obj.strftime("%A %d %B")
         where_token = WebDriverWait(driver, 10).until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, 'ul#whereToken input'))
         )
         where_token.send_keys('Elisabeth')
-        time.sleep(1)
+        time.sleep(0.5)
         ActionChains(driver).send_keys(
             Keys.ARROW_DOWN).send_keys(Keys.ENTER).perform()
-
+        time.sleep(0.5)
         when_field = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'when'))
+            EC.element_to_be_clickable((By.ID, 'when'))
         )
         when_field.click()
 
         date_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, f"//div[@class='date' and contains(text(), '{day}')]")
+            EC.element_to_be_clickable((By.XPATH, f"//div[@class='date' and normalize-space(text()) = '{formatted_date}']")
                                        ))
         date_button.click()
     except TimeoutException:
@@ -168,7 +172,8 @@ def click_search_button(driver):
         raise RuntimeError(
             "Erreur : Le bouton de recherche n'a pas pu être cliqué dans le délai imparti.")
 
-def is_element_found(driver):
+
+def is_no_result_element_found(driver):
     """Retourne True si l'élément est trouvé, sinon False."""
     try:
         WebDriverWait(driver, 3).until(
@@ -183,8 +188,9 @@ def is_element_found(driver):
 def click_first_booking_button(driver):
     """Clique sur le premier bouton pour réserver un créneau de tennis après la recherche."""
     try:
-        if not is_element_found:
-            raise RuntimeError("Erreur : Aucun créneau disponible avec les filtres choisis.")
+        if is_no_result_element_found(driver):
+            raise RuntimeError(
+                "Erreur : Aucun créneau disponible avec les filtres choisis.")
 
         first_booking_button = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'search-result-block')]//div[contains(@class, 'row tennis-court')]//button[contains(@class, 'btn')]")
@@ -431,7 +437,7 @@ def booking_tennis(date, start_time, end_time, court_type):
             return {"isSuccess": True, "message": "Booking successful."}
 
         except RuntimeError as e:
-            if attempt == max_attempts - 1:
+            if attempt == max_attempts - 1 or attempt == 0:
                 return {"isSuccess": False, "message": str(e)}
         except Exception as e:
             if attempt == max_attempts - 1:

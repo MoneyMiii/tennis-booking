@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
+from threading import Thread
 from flask import Flask, jsonify, request
-import werkzeug.serving
 from modules.booking_tennis import booking_tennis
 from modules.database import get_slots_by_date_and_status, init_db, add_slot, delete_slot, get_all_slots, update_slot_status, delete_slots_before_today, get_slot_by_id
 import flask_cors
 import flasgger
 import modules.swagger
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 app = Flask(__name__)
 flask_cors.CORS(app)
@@ -66,6 +67,11 @@ def add_slot_endpoint():
                 )
 
             result = booking_tennis(date, start_time, end_time, slot_type)
+            if 'Aucun créneau disponible' in result.get("message"):
+                return create_response(
+                    False,
+                    result.get("message")
+                )
             status = 'book' if result.get("isSuccess", False) else 'not_book'
             add_slot(date, start_time, end_time, slot_type, status)
 
@@ -116,7 +122,7 @@ def booking_tennis_cron():
 
     slots = get_slots_by_date_and_status(target_date, 'book')
 
-    if len(slots) > 0:
+    if len(slots['data']) > 0:
         return create_response(
             False,
             f"Un créneau avec le statut 'book' existe déjà pour la date {
@@ -126,7 +132,7 @@ def booking_tennis_cron():
 
     slots = get_slots_by_date_and_status(target_date, 'waiting')
 
-    if len(slots) == 0:
+    if len(slots['data']) == 0:
         return
 
     booking_successful = False
@@ -145,35 +151,23 @@ def booking_tennis_cron():
     delete_slots_before_today()
 
 
-def configure_worker():
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(booking_tennis_cron, 'cron', hour=8, minute=0)
-    scheduler.start()
-
-
-if __name__ == '__main__':
-    configure_worker()
-    werkzeug.serving.WSGIRequestHandler.protocol_version = "HTTP/1.1"
+def run_flask():
     app.run(debug=False, port=5000, threaded=True, host='0.0.0.0')
 
 
-# @app.route('/book-tennis', methods=['POST'])
-# @flasgger.swag_from('swags/book_tennis.yml')
-# def book_tennis_endpoint():
-#     try:
-#         data = request.json
-#         date = data.get('date')
-#         start_time = data.get('start_time')
-#         end_time = data.get('end_time')
-#         court_type = data.get('type')
+def configure_scheduler():
+    scheduler = BackgroundScheduler()
 
-#         if not all([date, start_time, end_time, court_type]):
-#             return create_response(False, "Tous les champs sont requis", status_code=400)
+    scheduler.add_job(
+        func=booking_tennis_cron,
+        trigger=CronTrigger(hour='8', minute='0'),
+    )
 
-#         result = booking_tennis(date, start_time, end_time, court_type)
-#         if result.get("isSuccess", False):
-#             return create_response(True, "Réservation réussie")
-#         else:
-#             return create_response(False, result.get("message", "Erreur inconnue"), status_code=400)
-#     except Exception as e:
-#         return create_response(False, str(e), status_code=500)
+    scheduler.start()
+
+
+configure_scheduler()
+
+if __name__ == '__main__':
+    thread = Thread(target=run_flask)
+    thread.start()

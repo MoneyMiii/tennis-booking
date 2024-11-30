@@ -130,6 +130,7 @@ def get_slots_by_date_and_status(date=None, status=None):
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             cursor.execute(query, params)
+
             slots = [
                 {
                     "id": row[0],
@@ -140,9 +141,17 @@ def get_slots_by_date_and_status(date=None, status=None):
                     "status": row[5]
                 } for row in cursor.fetchall()
             ]
+
         return {"isSuccess": True, "data": slots}
+
+    except sqlite3.Error as e:
+        logging.error(
+            f"Erreur lors de la récupération des créneaux. Détails: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur SQL: {str(e)}"}
+
     except Exception as e:
-        logging.error(f"Erreur lors de la récupération des créneaux: {str(e)}")
+        logging.error(
+            f"Erreur inattendue lors de la récupération des créneaux. Détails: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
