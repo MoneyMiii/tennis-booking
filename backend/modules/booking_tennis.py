@@ -442,11 +442,11 @@ def booking_tennis(date, start_time, end_time, court_type, credit_card):
         except Exception as e:
             if attempt == max_attempts - 1:
                 return {"isSuccess": False, "message": f"Unknown error: {str(e)}"}
-        finally:
-            try:
-                driver.quit()
-            except Exception:
-                print("Error closing the browser.")
+        #finally:
+        #    try:
+         #       driver.quit()
+        #    except Exception:
+        #        print("Error closing the browser.")
 
         if attempt < max_attempts - 1:
             time.sleep(120)
