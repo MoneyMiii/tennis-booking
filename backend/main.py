@@ -68,6 +68,11 @@ def add_slot_endpoint():
 
             result = booking_tennis_with_credit_card(
                 date, start_time, end_time, slot_type)
+            
+            if not result["isSuccess"]:
+                status_code = 500 if "Erreur interne" in result["message"] else 400
+                return create_response(False, result["message"], status_code=status_code)
+            
             if 'Aucun créneau disponible' in result.get("message"):
                 return create_response(
                     False,
@@ -304,15 +309,17 @@ def validate_credit_card_fields(data):
 
 
 def booking_tennis_with_credit_card(date, start_time, end_time, slot_type):
-    credit_card = get_used_credit_card()
+    try:
+        credit_card = get_used_credit_card()
 
-    if not credit_card:
-        return {"isSuccess": False, "message": "Aucune carte de crédit avec is_used = true trouvée."}
+        if not credit_card["isSuccess"]:
+            return {"isSuccess": False, "message": "Aucune carte de crédit avec is_used = true trouvée."}
 
-    result = booking_tennis(date, start_time, end_time,
-                            slot_type, credit_card["data"])
+        return booking_tennis(date, start_time, end_time,
+                                slot_type, credit_card["data"])
 
-    return result
+    except Exception as e:
+        return {"isSuccess": False, "message": f"Erreur interne : {str(e)}"}
 
 
 def run_flask():
