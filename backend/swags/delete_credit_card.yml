@@ -1,0 +1,28 @@
+tags:
+  - Credit Cards
+consumes:
+  - application/json
+parameters:
+  - in: path
+    name: id
+    description: "Identifiant de la carte à supprimer"
+    required: true
+    type: string
+    format: uuid
+    example: "123e4567-e89b-12d3-a456-426614174000"
+responses:
+  200:
+    description: "Carte supprimée avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Carte supprimée avec succès"
+  400:
+    description: "Carte introuvable"
+  500:
+    description: "Erreur interne du serveur"

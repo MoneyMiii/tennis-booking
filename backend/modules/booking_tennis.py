@@ -337,12 +337,12 @@ def pay_by_card(driver):
         raise RuntimeError(f"Error in pay_by_card: {str(e)}")
 
 
-def complete_card_data(driver):
+def complete_card_data(driver, credit_card):
     try:
-        card_number = os.getenv('CREDIT_CARD_NUMBER')
-        card_cvc = os.getenv('CREDIT_CARD_CVC')
-        expiry_month = int(os.getenv('CREDIT_CARD_EXPIRY_MONTH'))
-        expiry_year = int(os.getenv('CREDIT_CARD_EXPIRY_YEAR'))
+        card_number = credit_card['number']
+        card_cvc = credit_card['cvc']
+        expiry_month = credit_card['expiry_month']
+        expiry_year = credit_card['expiry_year']
 
         current_date = datetime.now()
         current_year = current_date.year
@@ -407,7 +407,7 @@ def check_inputs(date, start_time, end_time, court_type):
             f"court_type must be one of the following: {[ct.value for ct in CourtType]}, got: {court_type}.")
 
 
-def booking_tennis(date, start_time, end_time, court_type):
+def booking_tennis(date, start_time, end_time, court_type, credit_card):
     """Attempts to book a tennis slot with retries on failure."""
     max_attempts = 3
 
@@ -432,7 +432,7 @@ def booking_tennis(date, start_time, end_time, court_type):
             add_partenaire(driver)
             select_payment_formule(driver)
             pay_by_card(driver)
-            complete_card_data(driver)
+            complete_card_data(driver, credit_card)
 
             return {"isSuccess": True, "message": "Booking successful."}
 

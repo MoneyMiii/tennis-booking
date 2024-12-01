@@ -5,7 +5,6 @@ from datetime import datetime
 
 DB_NAME = "slots.db"
 
-# Configure logging
 logging.basicConfig(level=logging.ERROR,
                     format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -22,6 +21,18 @@ def init_db():
                     end_time TEXT NOT NULL,
                     type TEXT NOT NULL,
                     status TEXT NOT NULL DEFAULT 'not_book'
+                )
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS credit_cards (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    number TEXT NOT NULL,
+                    cvc TEXT NOT NULL,
+                    expiry_month INTEGER NOT NULL,
+                    expiry_year INTEGER NOT NULL,
+                    is_used BOOL NOT NULL
                 )
             """)
             conn.commit()
@@ -198,4 +209,136 @@ def get_slot_by_id(slot_id):
     except Exception as e:
         logging.error(f"Erreur lors de la récupération du créneau avec ID {
                       slot_id}: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
+
+
+def add_credit_card(name, number, cvc, expiry_month, expiry_year, is_used):
+    try:
+        card_id = str(uuid.uuid4())
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO credit_cards (id, name, number, cvc, expiry_month, expiry_year, is_used)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (card_id, name, number, cvc, expiry_month, expiry_year, is_used))
+            conn.commit()
+        return {"isSuccess": True, "message": "Carte ajoutée avec succès", "card_id": card_id}
+    except sqlite3.IntegrityError as e:
+        logging.error(
+            f"Erreur d'intégrité lors de l'ajout de la carte: {str(e)}")
+        return {"isSuccess": False, "message": "Erreur d'intégrité lors de l'ajout de la carte"}
+    except Exception as e:
+        logging.error(f"Erreur lors de l'ajout de la carte: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
+
+
+def get_all_credit_cards():
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT id, name, number, cvc, expiry_month, expiry_year, is_used FROM credit_cards")
+            cards = [
+                {
+                    "id": row[0],
+                    "name": row[1],
+                    "number": row[2],
+                    "cvc": row[3],
+                    "expiry_month": row[4],
+                    "expiry_year": row[5],
+                    "is_used": row[6]
+                } for row in cursor.fetchall()
+            ]
+        return {"isSuccess": True, "data": cards}
+    except Exception as e:
+        logging.error(f"Erreur lors de la récupération des cartes: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
+
+
+def delete_credit_card(card_id):
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM credit_cards WHERE id = ?", (card_id,))
+            conn.commit()
+        if cursor.rowcount > 0:
+            return {"isSuccess": True, "message": "Carte supprimée avec succès"}
+        else:
+            return {"isSuccess": False, "message": "Carte introuvable"}
+    except Exception as e:
+        logging.error(f"Erreur lors de la suppression de la carte: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
+
+
+def update_credit_card(card_id, name, number, cvc, expiry_month, expiry_year, is_used):
+    try:
+        updates = []
+        params = []
+
+        updates.append("name = ?")
+        params.append(name)
+
+        updates.append("number = ?")
+        params.append(number)
+
+        updates.append("cvc = ?")
+        params.append(cvc)
+
+        updates.append("expiry_month = ?")
+        params.append(expiry_month)
+
+        updates.append("expiry_year = ?")
+        params.append(expiry_year)
+
+        updates.append("is_used = ?")
+        params.append(is_used)
+
+        if not updates:
+            return {"isSuccess": False, "message": "Aucune mise à jour fournie"}
+
+        query = f"UPDATE credit_cards SET {', '.join(updates)} WHERE id = ?"
+        params.append(card_id)
+
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, params)
+            conn.commit()
+
+        if cursor.rowcount > 0:
+            return {"isSuccess": True, "message": "Carte mise à jour avec succès"}
+        else:
+            return {"isSuccess": False, "message": "Carte introuvable"}
+    except Exception as e:
+        logging.error(f"Erreur lors de la mise à jour de la carte: {str(e)}")
+        return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
+
+
+def get_used_credit_card():
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT id, name, number, cvc, expiry_month, expiry_year, is_used 
+                FROM credit_cards
+                WHERE is_used = 1
+            """)
+            row = cursor.fetchone()
+            if row:
+                return {
+                    "isSuccess": True,
+                    "data": {
+                        "id": row[0],
+                        "name": row[1],
+                        "number": row[2],
+                        "cvc": row[3],
+                        "expiry_month": row[4],
+                        "expiry_year": row[5],
+                        "is_used": bool(row[6])
+                    }
+                }
+            else:
+                return {"isSuccess": False, "message": "Aucune carte de crédit utilisée trouvée"}
+    except Exception as e:
+        logging.error(
+            f"Erreur lors de la récupération de la carte de crédit utilisée: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}

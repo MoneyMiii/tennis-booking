@@ -27,3 +27,23 @@ export interface SlotCalendar {
 export interface Ressource {
   status?: "book" | "not_book" | "waiting";
 }
+
+export interface CreditCardApi {
+  id: string;
+  name: string;
+  number: string;
+  cvc: string;
+  expiry_month: number;
+  expiry_year: number;
+  is_used: boolean;
+}
+
+export interface CreditCard {
+  id: string;
+  name: string;
+  number: string;
+  cvc: string;
+  expiryMonth: number;
+  expiryYear: number;
+  isUsed: boolean;
+}

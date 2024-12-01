@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from threading import Thread
 from flask import Flask, jsonify, request
 from modules.booking_tennis import booking_tennis
-from modules.database import get_slots_by_date_and_status, init_db, add_slot, delete_slot, get_all_slots, update_slot_status, delete_slots_before_today, get_slot_by_id
+from modules.database import add_credit_card, delete_credit_card, get_all_credit_cards, get_slots_by_date_and_status, get_used_credit_card, init_db, add_slot, delete_slot, get_all_slots, update_credit_card, update_slot_status, delete_slots_before_today, get_slot_by_id
 import flask_cors
 import flasgger
 import modules.swagger
@@ -66,7 +66,8 @@ def add_slot_endpoint():
                     status_code=400
                 )
 
-            result = booking_tennis(date, start_time, end_time, slot_type)
+            result = booking_tennis_with_credit_card(
+                date, start_time, end_time, slot_type)
             if 'Aucun créneau disponible' in result.get("message"):
                 return create_response(
                     False,
@@ -138,7 +139,7 @@ def booking_tennis_cron():
     booking_successful = False
 
     for slot in slots:
-        result = booking_tennis(
+        result = booking_tennis_with_credit_card(
             slot['date'], slot['start_time'], slot['end_time'], slot['type']
         )
 
@@ -149,6 +150,169 @@ def booking_tennis_cron():
             update_slot_status(slot['id'], 'not_book')
 
     delete_slots_before_today()
+
+
+@app.route('/credit_cards', methods=['POST'])
+@flasgger.swag_from('swags/add_credit_card.yml')
+def add_credit_card_endpoint():
+    try:
+        data = request.json
+        name = data.get('name')
+        number = data.get('number')
+        cvc = data.get('cvc')
+        expiry_month = data.get('expiry_month')
+        expiry_year = data.get('expiry_year')
+        is_used = data.get('is_used')
+
+        required_fields = ['name', 'number', 'cvc',
+                           'expiry_month', 'expiry_year', 'is_used']
+        missing_or_null_fields = [
+            field for field in required_fields if field not in data or data[field] is None]
+
+        if missing_or_null_fields:
+            return create_response(
+                False,
+                f"Les champs suivants sont requis et ne doivent pas être nuls : {
+                    ', '.join(missing_or_null_fields)}",
+                status_code=400
+            )
+
+        is_valid, error_message = validate_credit_card_fields(data)
+        if not is_valid:
+            return create_response(False, error_message, status_code=400)
+
+        if is_used:
+            current_used_card = get_used_credit_card()
+            if current_used_card['isSuccess'] and current_used_card['data']:
+                card = current_used_card['data']
+                update_credit_card(card['id'], card['name'], card['number'],
+                                   card['cvc'], card['expiry_month'], card['expiry_year'], False)
+
+        result = add_credit_card(
+            name, number, cvc, expiry_month, expiry_year, is_used)
+        return create_response(result['isSuccess'], result['message'])
+    except Exception as e:
+        return create_response(False, str(e), status_code=500)
+
+
+@app.route('/credit_cards', methods=['GET'])
+@flasgger.swag_from('swags/get_credit_cards.yml')
+def get_credit_cards_endpoint():
+    try:
+        result = get_all_credit_cards()
+        return create_response(result['isSuccess'], "Cartes récupérées avec succès" if result['isSuccess'] else result['message'], data=result if result['isSuccess'] else None)
+    except Exception as e:
+        return create_response(False, str(e), status_code=500)
+
+
+@app.route('/credit_cards/<id>', methods=['DELETE'])
+@flasgger.swag_from('swags/delete_credit_card.yml')
+def delete_credit_card_endpoint(id):
+    try:
+        current_used_card = get_used_credit_card()
+
+        if current_used_card["isSuccess"] and current_used_card["data"]["id"] == id:
+            return create_response(
+                False,
+                "Impossible de supprimer la carte utilisée actuellement.",
+                status_code=400
+            )
+
+        result = delete_credit_card(id)
+        return create_response(result['isSuccess'], result['message'])
+    except Exception as e:
+        return create_response(False, str(e), status_code=500)
+
+
+@app.route('/credit_cards/<id>', methods=['PUT'])
+@flasgger.swag_from('swags/update_credit_card.yml')
+def update_credit_card_endpoint(id):
+    try:
+        data = request.json
+        name = data.get('name')
+        number = data.get('number')
+        cvc = data.get('cvc')
+        expiry_month = data.get('expiry_month')
+        expiry_year = data.get('expiry_year')
+        is_used = data.get('is_used')
+
+        required_fields = ['name', 'number', 'cvc',
+                           'expiry_month', 'expiry_year', 'is_used']
+        missing_or_null_fields = [
+            field for field in required_fields if field not in data or data[field] is None]
+
+        if missing_or_null_fields:
+            return create_response(
+                False,
+                f"Les champs suivants sont requis et ne doivent pas être nuls : {
+                    ', '.join(missing_or_null_fields)}",
+                status_code=400
+            )
+
+        is_valid, error_message = validate_credit_card_fields(data)
+
+        if not is_valid:
+            return create_response(False, error_message, status_code=400)
+
+        current_used_card = get_used_credit_card()
+
+        if is_used:
+            if current_used_card['isSuccess'] and current_used_card['data']:
+                card = current_used_card['data']
+                update_credit_card(card['id'], card['name'], card['number'],
+                                   card['cvc'], card['expiry_month'], card['expiry_year'], False)
+        else:
+            if id == current_used_card['data']['id']:
+                return create_response(False, "Vous ne pouvez pas désactiver la carte qui est la carte utilisée", status_code=400)
+
+        result = update_credit_card(
+            id,
+            name,
+            number,
+            cvc,
+            expiry_month,
+            expiry_year,
+            is_used
+        )
+        return create_response(result['isSuccess'], result['message'])
+    except Exception as e:
+        return create_response(False, str(e), status_code=500)
+
+
+def validate_credit_card_fields(data):
+    """
+    Validate credit card fields.
+    """
+    try:
+        cvc = data.get('cvc')
+        expiry_month = data.get('expiry_month')
+        expiry_year = data.get('expiry_year')
+
+        if not (isinstance(cvc, str) and cvc.isdigit() and len(cvc) == 3):
+            return False, "Le CVC doit être un code numérique de 3 chiffres."
+
+        if not (1 <= int(expiry_month) <= 12):
+            return False, "Le mois d'expiration doit être compris entre 1 et 12."
+
+        current_year = datetime.now().year
+        if int(expiry_year) < current_year:
+            return False, "L'année d'expiration doit être au moins égale à l'année actuelle."
+
+        return True, None
+    except Exception as e:
+        return False, str(e)
+
+
+def booking_tennis_with_credit_card(date, start_time, end_time, slot_type):
+    credit_card = get_used_credit_card()
+
+    if not credit_card:
+        return {"isSuccess": False, "message": "Aucune carte de crédit avec is_used = true trouvée."}
+
+    result = booking_tennis(date, start_time, end_time,
+                            slot_type, credit_card["data"])
+
+    return result
 
 
 def run_flask():

@@ -1,0 +1,56 @@
+tags:
+  - Credit Cards
+consumes:
+  - application/json
+parameters:
+  - in: body
+    name: card
+    description: "Détails de la carte de crédit à ajouter"
+    required: true
+    schema:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "Nom du titulaire de la carte"
+          example: "John Doe"
+        number:
+          type: string
+          description: "Numéro de la carte"
+          example: "4111111111111111"
+        cvc:
+          type: string
+          description: "Code de sécurité de la carte"
+          example: "123"
+        expiry_month:
+          type: integer
+          description: "Mois d'expiration de la carte (1-12)"
+          example: 12
+        expiry_year:
+          type: integer
+          description: "Année d'expiration de la carte (format YYYY)"
+          example: 2025
+        is_used:
+          type: boolean
+          description: "Indique si la carte a été utilisée"
+          example: false
+responses:
+  200:
+    description: "Carte ajoutée avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Carte ajoutée avec succès"
+        card_id:
+          type: string
+          description: "Identifiant unique de la carte"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+  400:
+    description: "Données invalides fournies"
+  500:
+    description: "Erreur interne du serveur"

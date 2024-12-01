@@ -1,0 +1,48 @@
+tags:
+  - Credit Cards
+produces:
+  - application/json
+responses:
+  200:
+    description: "Liste des cartes récupérées avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "Identifiant de la carte"
+                example: "58630af8-2da0-46e2-ba1b-fadefe19eba0"
+              name:
+                type: string
+                description: "Nom du titulaire de la carte"
+                example: "John Doe"
+              number:
+                type: string
+                description: "Numéro de la carte (masqué)"
+                example: "4111********1111"
+              cvc:
+                type: string
+                description: "Code de sécurité (non affiché)"
+                example: "***"
+              expiry_month:
+                type: integer
+                description: "Mois d'expiration de la carte"
+                example: 12
+              expiry_year:
+                type: integer
+                description: "Année d'expiration de la carte"
+                example: 2025
+              is_used:
+                type: boolean
+                description: "Indique si la carte a été utilisée"
+                example: false
+  500:
+    description: "Erreur interne du serveur"
