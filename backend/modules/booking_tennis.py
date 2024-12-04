@@ -292,7 +292,7 @@ def add_partenaire(driver):
                  "//div[@class='form-group has-feedback name']//input[@name='player1']")
             )
         )
-        name_input.send_keys("Dupont")
+        name_input.send_keys("Lelandais")
 
         firstname_input = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located(
@@ -300,7 +300,7 @@ def add_partenaire(driver):
                  "//div[@class='form-group has-feedback firstname']//input[@name='player1']")
             )
         )
-        firstname_input.send_keys("Jean")
+        firstname_input.send_keys("Christine")
 
         firstname_input.send_keys(Keys.ENTER)
     except Exception as e:
