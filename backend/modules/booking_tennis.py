@@ -103,7 +103,6 @@ def select_terrain(driver, court_type: CourtType):
         dropdown_button = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.ID, 'dropdownTerrain'))
         )
-
         time.sleep(1)
 
         dropdown_button.click()
@@ -383,8 +382,8 @@ def complete_card_data(driver, credit_card):
                 (By.ID, 'form_submit')
             )
         )
-        # Uncomment the line below to enable form submission
-        # button_submit.click()
+        
+        button_submit.click()
 
     except Exception as e:
         raise RuntimeError(f"Error in complete_card_data: {str(e)}")
@@ -445,11 +444,11 @@ def booking_tennis(date, start_time, end_time, court_type, credit_card):
         except Exception as e:
             if attempt == max_attempts - 1:
                 return {"isSuccess": False, "message": f"Unknown error: {str(e)}"}
-        # finally:
-        #    try:
-         #       driver.quit()
-        #    except Exception:
-        #        print("Error closing the browser.")
+        finally:
+            try:
+                driver.quit()
+            except Exception:
+                print("Error closing the browser.")
 
         if attempt < max_attempts - 1:
             time.sleep(120)
