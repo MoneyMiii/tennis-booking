@@ -37,11 +37,11 @@ def login(driver):
         driver.get(
             'https://v70-auth.paris.fr/auth/realms/paris/protocol/openid-connect/auth?client_id=moncompte_modal&response_type=code&redirect_uri=https%3A%2F%2Fmoncompte.paris.fr%2Fmoncompte%2Fjsp%2Fsite%2FPortal.jsp%3Fpage%3Dmyluteceusergu%26view%3DcreateAccountModal%26close_modal%3Dtrue%26data_client%3DauthData%26handler_name%3DbannerLoginHandler&scope=openid&state=be6675ef91c4d4e5143440d10b7e0cef&nonce=39f06d1f2f815f275edec4f6b8c30a13&app_code=&back_url=https%3A%2F%2Ftennis.paris.fr%2Ftennis%2Fjsp%2Fsite%2FPortal.jsp%3Fpage%3Dtennis%26view%3DstartDefault%26full%3D1')
 
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located(
             (By.ID, 'username'))).send_keys(os.getenv('EMAIL_LOGGING'))
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located(
+        WebDriverWait(driver, 30).until(EC.presence_of_element_located(
             (By.ID, 'password'))).send_keys(os.getenv('PWD_LOGGING'))
-        WebDriverWait(driver, 10).until(
+        WebDriverWait(driver, 30).until(
             EC.element_to_be_clickable((By.NAME, 'Submit'))).click()
     except TimeoutException:
         raise RuntimeError("Erreur : Temps dépassé lors de la connexion.")
@@ -100,9 +100,12 @@ def select_terrain(driver, court_type: CourtType):
         if court_type == CourtType.BOTH.value:
             return
 
-        dropdown_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.ID, 'dropdownTerrain'))
+        dropdown_button = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.ID, 'dropdownTerrain'))
         )
+
+        time.sleep(1)
+
         dropdown_button.click()
 
         if court_type == CourtType.INDOOR.value:
@@ -442,7 +445,7 @@ def booking_tennis(date, start_time, end_time, court_type, credit_card):
         except Exception as e:
             if attempt == max_attempts - 1:
                 return {"isSuccess": False, "message": f"Unknown error: {str(e)}"}
-        #finally:
+        # finally:
         #    try:
          #       driver.quit()
         #    except Exception:
