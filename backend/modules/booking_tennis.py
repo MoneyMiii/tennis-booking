@@ -31,16 +31,16 @@ def setup_driver():
             f"Erreur lors de la configuration du driver : {str(e)}")
 
 
-def login(driver):
+def login(driver, account):
     """Connecte l'utilisateur avec ses identifiants."""
     try:
         driver.get(
             'https://v70-auth.paris.fr/auth/realms/paris/protocol/openid-connect/auth?client_id=moncompte_modal&response_type=code&redirect_uri=https%3A%2F%2Fmoncompte.paris.fr%2Fmoncompte%2Fjsp%2Fsite%2FPortal.jsp%3Fpage%3Dmyluteceusergu%26view%3DcreateAccountModal%26close_modal%3Dtrue%26data_client%3DauthData%26handler_name%3DbannerLoginHandler&scope=openid&state=be6675ef91c4d4e5143440d10b7e0cef&nonce=39f06d1f2f815f275edec4f6b8c30a13&app_code=&back_url=https%3A%2F%2Ftennis.paris.fr%2Ftennis%2Fjsp%2Fsite%2FPortal.jsp%3Fpage%3Dtennis%26view%3DstartDefault%26full%3D1')
 
         WebDriverWait(driver, 30).until(EC.presence_of_element_located(
-            (By.ID, 'username'))).send_keys(os.getenv('EMAIL_LOGGING'))
+            (By.ID, 'username'))).send_keys(account['email'])
         WebDriverWait(driver, 30).until(EC.presence_of_element_located(
-            (By.ID, 'password'))).send_keys(os.getenv('PWD_LOGGING'))
+            (By.ID, 'password'))).send_keys(account['password'])
         WebDriverWait(driver, 30).until(
             EC.element_to_be_clickable((By.NAME, 'Submit'))).click()
     except TimeoutException:
@@ -312,7 +312,7 @@ def select_payment_formule(driver):
         selected_table = WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable(
                 (By.CSS_SELECTOR,
-                 "table.price-item.text-center.option[paymentmode='ticket'][nbtickets='1']")
+                 "table.price-item.text-center.option[paymentmode='existingTicket']")
             )
         )
         selected_table.click()
@@ -325,69 +325,6 @@ def select_payment_formule(driver):
         button_next_step.click()
     except Exception as e:
         raise RuntimeError(f"Error in select_payment_formule: {str(e)}")
-
-
-def pay_by_card(driver):
-    try:
-        button_pay_by_card = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.ID, 'textBoutonPaiement')
-            )
-        )
-        button_pay_by_card.click()
-    except Exception as e:
-        raise RuntimeError(f"Error in pay_by_card: {str(e)}")
-
-
-def complete_card_data(driver, credit_card):
-    try:
-        card_number = credit_card['number']
-        card_cvc = credit_card['cvc']
-        expiry_month = credit_card['expiry_month']
-        expiry_year = credit_card['expiry_year']
-
-        current_date = datetime.now()
-        current_year = current_date.year
-
-        card_number_input = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located(
-                (By.ID, 'cardNumberField')
-            )
-        )
-        card_number_input.send_keys(card_number)
-
-        ActionChains(driver).send_keys(Keys.TAB).perform()
-
-        for _ in range(expiry_month - 1):
-            ActionChains(driver).send_keys(Keys.ARROW_DOWN).perform()
-
-        ActionChains(driver).send_keys(Keys.TAB).perform()
-
-        years_to_arrow_down = int(expiry_year) - current_year
-        if years_to_arrow_down < 0:
-            raise ValueError("The card expiry year is already passed.")
-
-        for _ in range(years_to_arrow_down):
-            ActionChains(driver).send_keys(Keys.ARROW_DOWN).perform()
-
-        cryptogramme_input = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located(
-                (By.ID, 'cvvfield')
-            )
-        )
-        cryptogramme_input.send_keys(card_cvc)
-
-        button_submit = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable(
-                (By.ID, 'form_submit')
-            )
-        )
-        
-        button_submit.click()
-
-    except Exception as e:
-        raise RuntimeError(f"Error in complete_card_data: {str(e)}")
-
 
 def check_inputs(date, start_time, end_time, court_type):
     try:
@@ -409,7 +346,7 @@ def check_inputs(date, start_time, end_time, court_type):
             f"court_type must be one of the following: {[ct.value for ct in CourtType]}, got: {court_type}.")
 
 
-def booking_tennis(date, start_time, end_time, court_type, credit_card):
+def booking_tennis(date, start_time, end_time, court_type, account):
     """Attempts to book a tennis slot with retries on failure."""
     max_attempts = 3
 
@@ -420,7 +357,7 @@ def booking_tennis(date, start_time, end_time, court_type, credit_card):
 
             # Setup and navigation
             driver = setup_driver()
-            login(driver)
+            login(driver, account)
             navigate_to_tennis_page(driver)
 
             # Booking process
@@ -433,8 +370,6 @@ def booking_tennis(date, start_time, end_time, court_type, credit_card):
             go_to_add_partenaire(driver)
             add_partenaire(driver)
             select_payment_formule(driver)
-            pay_by_card(driver)
-            complete_card_data(driver, credit_card)
 
             return {"isSuccess": True, "message": "Booking successful."}
 

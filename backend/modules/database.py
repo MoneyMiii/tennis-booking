@@ -212,83 +212,71 @@ def get_slot_by_id(slot_id):
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
-def add_credit_card(name, number, cvc, expiry_month, expiry_year, is_used):
+def add_account(email, password, is_used):
     try:
-        card_id = str(uuid.uuid4())
+        id = str(uuid.uuid4())
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                INSERT INTO credit_cards (id, name, number, cvc, expiry_month, expiry_year, is_used)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (card_id, name, number, cvc, expiry_month, expiry_year, is_used))
+                INSERT INTO accounts (id, email, password, is_used)
+                VALUES (?, ?, ?, ?)
+            """, (id, email, password, is_used))
             conn.commit()
-        return {"isSuccess": True, "message": "Carte ajoutée avec succès", "card_id": card_id}
+        return {"isSuccess": True, "message": "Compte ajouté avec succès", "id": id}
     except sqlite3.IntegrityError as e:
         logging.error(
-            f"Erreur d'intégrité lors de l'ajout de la carte: {str(e)}")
-        return {"isSuccess": False, "message": "Erreur d'intégrité lors de l'ajout de la carte"}
+            f"Erreur d'intégrité lors de l'ajout du compte: {str(e)}")
+        return {"isSuccess": False, "message": "Erreur d'intégrité lors de l'ajout du compte"}
     except Exception as e:
-        logging.error(f"Erreur lors de l'ajout de la carte: {str(e)}")
+        logging.error(f"Erreur lors de l'ajout du compte: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
-def get_all_credit_cards():
+def get_all_accounts():
     try:
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "SELECT id, name, number, cvc, expiry_month, expiry_year, is_used FROM credit_cards")
-            cards = [
+                "SELECT id, email, password, is_used FROM accounts")
+            accounts = [
                 {
                     "id": row[0],
-                    "name": row[1],
-                    "number": row[2],
-                    "cvc": row[3],
-                    "expiry_month": row[4],
-                    "expiry_year": row[5],
-                    "is_used": row[6]
+                    "email": row[1],
+                    "password": row[2],
+                    "is_used": row[3]
                 } for row in cursor.fetchall()
             ]
-        return {"isSuccess": True, "data": cards}
+        return {"isSuccess": True, "data": accounts}
     except Exception as e:
-        logging.error(f"Erreur lors de la récupération des cartes: {str(e)}")
+        logging.error(f"Erreur lors de la récupération des comptes: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
-def delete_credit_card(card_id):
+def delete_account(id):
     try:
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM credit_cards WHERE id = ?", (card_id,))
+            cursor.execute("DELETE FROM accounts WHERE id = ?", (id,))
             conn.commit()
         if cursor.rowcount > 0:
-            return {"isSuccess": True, "message": "Carte supprimée avec succès"}
+            return {"isSuccess": True, "message": "Compte supprimé avec succès"}
         else:
-            return {"isSuccess": False, "message": "Carte introuvable"}
+            return {"isSuccess": False, "message": "Compte introuvable"}
     except Exception as e:
-        logging.error(f"Erreur lors de la suppression de la carte: {str(e)}")
+        logging.error(f"Erreur lors de la suppression du compte: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
-def update_credit_card(card_id, name, number, cvc, expiry_month, expiry_year, is_used):
+def update_account(id, email, password, is_used):
     try:
         updates = []
         params = []
 
-        updates.append("name = ?")
-        params.append(name)
+        updates.append("email = ?")
+        params.append(email)
 
-        updates.append("number = ?")
-        params.append(number)
-
-        updates.append("cvc = ?")
-        params.append(cvc)
-
-        updates.append("expiry_month = ?")
-        params.append(expiry_month)
-
-        updates.append("expiry_year = ?")
-        params.append(expiry_year)
+        updates.append("password = ?")
+        params.append(password)
 
         updates.append("is_used = ?")
         params.append(is_used)
@@ -296,8 +284,8 @@ def update_credit_card(card_id, name, number, cvc, expiry_month, expiry_year, is
         if not updates:
             return {"isSuccess": False, "message": "Aucune mise à jour fournie"}
 
-        query = f"UPDATE credit_cards SET {', '.join(updates)} WHERE id = ?"
-        params.append(card_id)
+        query = f"UPDATE accounts SET {', '.join(updates)} WHERE id = ?"
+        params.append(id)
 
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
@@ -305,21 +293,21 @@ def update_credit_card(card_id, name, number, cvc, expiry_month, expiry_year, is
             conn.commit()
 
         if cursor.rowcount > 0:
-            return {"isSuccess": True, "message": "Carte mise à jour avec succès"}
+            return {"isSuccess": True, "message": "Compte mis à jour avec succès"}
         else:
-            return {"isSuccess": False, "message": "Carte introuvable"}
+            return {"isSuccess": False, "message": "Compte introuvable"}
     except Exception as e:
-        logging.error(f"Erreur lors de la mise à jour de la carte: {str(e)}")
+        logging.error(f"Erreur lors de la mise à jour du compte: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}
 
 
-def get_used_credit_card():
+def get_used_account():
     try:
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             cursor.execute("""
-                SELECT id, name, number, cvc, expiry_month, expiry_year, is_used 
-                FROM credit_cards
+                SELECT id, email, password, is_used 
+                FROM accounts
                 WHERE is_used = 1
             """)
             row = cursor.fetchone()
@@ -328,17 +316,14 @@ def get_used_credit_card():
                     "isSuccess": True,
                     "data": {
                         "id": row[0],
-                        "name": row[1],
-                        "number": row[2],
-                        "cvc": row[3],
-                        "expiry_month": row[4],
-                        "expiry_year": row[5],
-                        "is_used": bool(row[6])
+                        "email": row[1],
+                        "password": row[2],
+                        "is_used": bool(row[3])
                     }
                 }
             else:
-                return {"isSuccess": False, "message": "Aucune carte de crédit utilisée trouvée"}
+                return {"isSuccess": False, "message": "Aucun compte utilisé trouvé"}
     except Exception as e:
         logging.error(
-            f"Erreur lors de la récupération de la carte de crédit utilisée: {str(e)}")
+            f"Erreur lors de la récupération du compte utilisé: {str(e)}")
         return {"isSuccess": False, "message": f"Erreur inconnue: {str(e)}"}

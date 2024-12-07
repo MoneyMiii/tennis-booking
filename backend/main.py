@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from threading import Thread
 from flask import Flask, jsonify, request
 from modules.booking_tennis import booking_tennis
-from modules.database import add_credit_card, delete_credit_card, get_all_credit_cards, get_slots_by_date_and_status, get_used_credit_card, init_db, add_slot, delete_slot, get_all_slots, update_credit_card, update_slot_status, delete_slots_before_today, get_slot_by_id
+from modules.database import add_account, delete_account, get_all_accounts, get_slots_by_date_and_status, get_used_account, init_db, add_slot, delete_slot, get_all_slots, update_account, update_slot_status, delete_slots_before_today, get_slot_by_id
 import flask_cors
 import flasgger
 import modules.swagger
@@ -66,7 +66,7 @@ def add_slot_endpoint():
                     status_code=400
                 )
 
-            result = booking_tennis_with_credit_card(
+            result = booking_tennis_with_account(
                 date, start_time, end_time, slot_type)
             
             if not result["isSuccess"]:
@@ -144,7 +144,7 @@ def booking_tennis_cron():
     booking_successful = False
 
     for slot in slots:
-        result = booking_tennis_with_credit_card(
+        result = booking_tennis_with_account(
             slot['date'], slot['start_time'], slot['end_time'], slot['type']
         )
 
@@ -157,20 +157,17 @@ def booking_tennis_cron():
     delete_slots_before_today()
 
 
-@app.route('/credit_cards', methods=['POST'])
-@flasgger.swag_from('swags/add_credit_card.yml')
-def add_credit_card_endpoint():
+@app.route('/account', methods=['POST'])
+@flasgger.swag_from('swags/add_account.yml')
+def add_account_endpoint():
     try:
         data = request.json
-        name = data.get('name')
-        number = data.get('number')
-        cvc = data.get('cvc')
-        expiry_month = data.get('expiry_month')
-        expiry_year = data.get('expiry_year')
+        email = data.get('email')
+        password = data.get('password')
         is_used = data.get('is_used')
 
-        required_fields = ['name', 'number', 'cvc',
-                           'expiry_month', 'expiry_year', 'is_used']
+        required_fields = ['email', 'password', 'is_used']
+        
         missing_or_null_fields = [
             field for field in required_fields if field not in data or data[field] is None]
 
@@ -182,67 +179,58 @@ def add_credit_card_endpoint():
                 status_code=400
             )
 
-        is_valid, error_message = validate_credit_card_fields(data)
-        if not is_valid:
-            return create_response(False, error_message, status_code=400)
-
         if is_used:
-            current_used_card = get_used_credit_card()
-            if current_used_card['isSuccess'] and current_used_card['data']:
-                card = current_used_card['data']
-                update_credit_card(card['id'], card['name'], card['number'],
-                                   card['cvc'], card['expiry_month'], card['expiry_year'], False)
+            current_account = get_used_account()
+            if current_account['isSuccess'] and current_account['data']:
+                account = current_account['data']
+                update_account(account['id'], account['email'], account['password'], False)
 
-        result = add_credit_card(
-            name, number, cvc, expiry_month, expiry_year, is_used)
+        result = add_account(
+            email, password, is_used)
         return create_response(result['isSuccess'], result['message'])
     except Exception as e:
         return create_response(False, str(e), status_code=500)
 
 
-@app.route('/credit_cards', methods=['GET'])
-@flasgger.swag_from('swags/get_credit_cards.yml')
-def get_credit_cards_endpoint():
+@app.route('/account', methods=['GET'])
+@flasgger.swag_from('swags/get_accounts.yml')
+def get_accounts_endpoint():
     try:
-        result = get_all_credit_cards()
-        return create_response(result['isSuccess'], "Cartes récupérées avec succès" if result['isSuccess'] else result['message'], data=result if result['isSuccess'] else None)
+        result = get_all_accounts()
+        return create_response(result['isSuccess'], "Comptes récupérés avec succès" if result['isSuccess'] else result['message'], data=result if result['isSuccess'] else None)
     except Exception as e:
         return create_response(False, str(e), status_code=500)
 
 
-@app.route('/credit_cards/<id>', methods=['DELETE'])
+@app.route('/accounts/<id>', methods=['DELETE'])
 @flasgger.swag_from('swags/delete_credit_card.yml')
-def delete_credit_card_endpoint(id):
+def delete_account_endpoint(id):
     try:
-        current_used_card = get_used_credit_card()
+        current_account = get_used_account()
 
-        if current_used_card["isSuccess"] and current_used_card["data"]["id"] == id:
+        if current_account["isSuccess"] and current_account["data"]["id"] == id:
             return create_response(
                 False,
-                "Impossible de supprimer la carte utilisée actuellement.",
+                "Impossible de supprimer le compte utilisé actuellement.",
                 status_code=400
             )
 
-        result = delete_credit_card(id)
+        result = delete_account(id)
         return create_response(result['isSuccess'], result['message'])
     except Exception as e:
         return create_response(False, str(e), status_code=500)
 
 
-@app.route('/credit_cards/<id>', methods=['PUT'])
+@app.route('/accounts/<id>', methods=['PUT'])
 @flasgger.swag_from('swags/update_credit_card.yml')
-def update_credit_card_endpoint(id):
+def update_account_endpoint(id):
     try:
         data = request.json
-        name = data.get('name')
-        number = data.get('number')
-        cvc = data.get('cvc')
-        expiry_month = data.get('expiry_month')
-        expiry_year = data.get('expiry_year')
+        email = data.get('email')
+        password = data.get('password')
         is_used = data.get('is_used')
 
-        required_fields = ['name', 'number', 'cvc',
-                           'expiry_month', 'expiry_year', 'is_used']
+        required_fields = ['email', 'password', 'is_used']
         missing_or_null_fields = [
             field for field in required_fields if field not in data or data[field] is None]
 
@@ -254,69 +242,35 @@ def update_credit_card_endpoint(id):
                 status_code=400
             )
 
-        is_valid, error_message = validate_credit_card_fields(data)
-
-        if not is_valid:
-            return create_response(False, error_message, status_code=400)
-
-        current_used_card = get_used_credit_card()
+        current_used_account = get_used_account()
 
         if is_used:
-            if current_used_card['isSuccess'] and current_used_card['data']:
-                card = current_used_card['data']
-                update_credit_card(card['id'], card['name'], card['number'],
-                                   card['cvc'], card['expiry_month'], card['expiry_year'], False)
+            if current_used_account['isSuccess'] and current_used_account['data']:
+                account = current_used_account['data']
+                update_account(account['id'], account['email'], account['password'], False)
         else:
-            if id == current_used_card['data']['id']:
-                return create_response(False, "Vous ne pouvez pas désactiver la carte qui est la carte utilisée", status_code=400)
+            if id == current_used_account['data']['id']:
+                return create_response(False, "Vous ne pouvez pas désactiver le compte qui est celui utilisé", status_code=400)
 
-        result = update_credit_card(
+        result = update_account(
             id,
-            name,
-            number,
-            cvc,
-            expiry_month,
-            expiry_year,
+            email,
+            password,
             is_used
         )
         return create_response(result['isSuccess'], result['message'])
     except Exception as e:
         return create_response(False, str(e), status_code=500)
 
-
-def validate_credit_card_fields(data):
-    """
-    Validate credit card fields.
-    """
+def booking_tennis_with_account(date, start_time, end_time, slot_type):
     try:
-        cvc = data.get('cvc')
-        expiry_month = data.get('expiry_month')
-        expiry_year = data.get('expiry_year')
+        account = get_used_account()
 
-        if not (isinstance(cvc, str) and cvc.isdigit() and len(cvc) == 3):
-            return False, "Le CVC doit être un code numérique de 3 chiffres."
-
-        if not (1 <= int(expiry_month) <= 12):
-            return False, "Le mois d'expiration doit être compris entre 1 et 12."
-
-        current_year = datetime.now().year
-        if int(expiry_year) < current_year:
-            return False, "L'année d'expiration doit être au moins égale à l'année actuelle."
-
-        return True, None
-    except Exception as e:
-        return False, str(e)
-
-
-def booking_tennis_with_credit_card(date, start_time, end_time, slot_type):
-    try:
-        credit_card = get_used_credit_card()
-
-        if not credit_card["isSuccess"]:
-            return {"isSuccess": False, "message": "Aucune carte de crédit avec is_used = true trouvée."}
+        if not account["isSuccess"]:
+            return {"isSuccess": False, "message": "Aucun compte avec is_used = true trouvé."}
 
         return booking_tennis(date, start_time, end_time,
-                                slot_type, credit_card["data"])
+                                slot_type, account["data"])
 
     except Exception as e:
         return {"isSuccess": False, "message": f"Erreur interne : {str(e)}"}
