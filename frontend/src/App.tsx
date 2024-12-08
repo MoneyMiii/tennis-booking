@@ -37,11 +37,9 @@ const App: React.FC = () => {
   const [carnetsReservation, setCarnetsReservation] = useState<
     CarnetReservation[]
   >([]);
-
   const [courtType, setCourtType] = useState<
     "indoor" | "outdoor" | "both" | null
   >(null);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
@@ -49,50 +47,63 @@ const App: React.FC = () => {
     useState(false);
 
   const [slotToDelete, setSlotToDelete] = useState<Slot | null>(null);
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const [activeRequests, setActiveRequests] = useState(0); // Compteur pour les appels API en cours
+
+  const updateLoadingState = (isActive: boolean) => {
+    setActiveRequests((prev) => (isActive ? prev + 1 : prev - 1));
+  };
+
   const fetchSlots = useCallback(async () => {
-    setLoading(true);
-    getSlots()
-      .then((slots) => {
-        setSlots(slots);
-      })
-      .catch((err: { isSuccess: boolean; message: string }) =>
-        setErrorMessage(err?.message)
-      )
-      .finally(() => setLoading(false));
-  }, [setLoading]);
+    updateLoadingState(true); // Augmenter le compteur
+    try {
+      const slots = await getSlots();
+      setSlots(slots);
+    } catch (err: any) {
+      setErrorMessage(err?.message);
+    } finally {
+      updateLoadingState(false);
+    }
+  }, []);
 
   const fetchAccounts = useCallback(async () => {
-    setLoading(true);
+    updateLoadingState(true);
     try {
       const accounts = await getAccounts();
       setAccounts(accounts);
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
-      setLoading(false);
+      updateLoadingState(false);
     }
-  }, [setLoading]);
+  }, []);
 
   const fetchCarnets = useCallback(async () => {
-    setLoading(true);
+    updateLoadingState(true);
     try {
       const carnets = await getCarnetsReservation();
       setCarnetsReservation(carnets);
     } catch (error: any) {
       setErrorMessage(error?.message || "Une erreur inconnue est survenue");
     } finally {
-      setLoading(false);
+      updateLoadingState(false);
     }
-  }, [setLoading]);
+  }, []);
 
   useEffect(() => {
     fetchSlots();
     fetchAccounts();
     fetchCarnets();
   }, [fetchSlots, fetchAccounts, fetchCarnets]);
+
+  useEffect(() => {
+    if (activeRequests > 0) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [activeRequests, setLoading]);
 
   const handleSlotSelect = (start: Date, end: Date) => {
     const isFullDay =
@@ -113,40 +124,67 @@ const App: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleConfirm = async () => {
-    if (selectedSlot && courtType) {
-      setLoading(true);
-      setIsModalOpen(false);
-      addSlot(
-        selectedSlot.start.toISOString().split("T")[0],
-        selectedSlot.start.getHours(),
-        selectedSlot.end.getHours(),
-        courtType
-      )
-        .then(() => fetchSlots())
-        .catch((err: { isSuccess: boolean; message: string }) => {
-          setErrorMessage(err?.message);
-        })
-        .finally(() => setLoading(false));
-    }
-  };
-
   const handleDeleteEvent = (slot: Slot) => {
     setSlotToDelete(slot);
     setIsDeleteModalOpen(true);
   };
 
+  const handleConfirm = async () => {
+    if (selectedSlot && courtType) {
+      updateLoadingState(true);
+      setIsModalOpen(false);
+      try {
+        await addSlot(
+          selectedSlot.start.toISOString().split("T")[0],
+          selectedSlot.start.getHours(),
+          selectedSlot.end.getHours(),
+          courtType
+        );
+        fetchSlots();
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setErrorMessage(err.message);
+        } else if (
+          err &&
+          typeof err === "object" &&
+          "message" in err &&
+          "isSuccess" in err
+        ) {
+          const customErr = err as { isSuccess: boolean; message: string };
+          setErrorMessage(customErr.message);
+        } else {
+          setErrorMessage("Une erreur inconnue est survenue");
+        }
+      } finally {
+        updateLoadingState(false);
+      }
+    }
+  };
+
   const handleConfirmDelete = async () => {
     if (slotToDelete) {
-      setLoading(true);
+      updateLoadingState(true);
       setIsDeleteModalOpen(false);
-      deleteSlot(slotToDelete.id)
-        .then(() => fetchSlots())
-        .catch((err: { isSuccess: boolean; message: string }) => {
-          console.log(err);
-          setErrorMessage(err?.message);
-        })
-        .finally(() => setLoading(false));
+      try {
+        await deleteSlot(slotToDelete.id);
+        fetchSlots();
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setErrorMessage(err.message);
+        } else if (
+          err &&
+          typeof err === "object" &&
+          "message" in err &&
+          "isSuccess" in err
+        ) {
+          const customErr = err as { isSuccess: boolean; message: string };
+          setErrorMessage(customErr.message);
+        } else {
+          setErrorMessage("Une erreur inconnue est survenue");
+        }
+      } finally {
+        updateLoadingState(false);
+      }
     }
   };
 
@@ -165,26 +203,26 @@ const App: React.FC = () => {
   };
 
   const handleAddAccount = async (account: Omit<Account, "id">) => {
-    setLoading(true);
+    updateLoadingState(true);
     try {
       await addAccount(account.email, account.password, account.isUsed);
       fetchAccounts();
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
-      setLoading(false);
+      updateLoadingState(false);
     }
   };
 
   const handleDeleteAccount = async (id: string) => {
-    setLoading(true);
+    updateLoadingState(true);
     try {
       await deleteAccount(id);
       fetchAccounts();
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
-      setLoading(false);
+      updateLoadingState(false);
     }
   };
 
@@ -192,7 +230,7 @@ const App: React.FC = () => {
     id: string,
     updatedAccount: Omit<Account, "id">
   ) => {
-    setLoading(true);
+    updateLoadingState(true);
     try {
       await updateAccount(
         id,
@@ -204,9 +242,10 @@ const App: React.FC = () => {
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
-      setLoading(false);
+      updateLoadingState(false);
     }
   };
+
   const handleOpenAccountModal = () => {
     setIsAccountModalOpen(true);
   };
@@ -233,7 +272,7 @@ const App: React.FC = () => {
         <Button
           variant="outlined"
           size="small"
-          sx={{ marginBottom: "5px" }}
+          sx={{ marginBottom: "5px", marginRight: "10px" }}
           onClick={handleOpenAccountModal}
         >
           Gérer les comptes
