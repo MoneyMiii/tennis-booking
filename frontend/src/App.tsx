@@ -3,34 +3,40 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 
 import {
-  addCreditCard,
+  addAccount,
   addSlot,
-  deleteCreditCard,
+  deleteAccount,
   deleteSlot,
-  getCreditCards,
+  getAccounts,
+  getCarnetsReservation,
   getSlots,
-  updateCreditCard
+  updateAccount
 } from "./api/api";
 import CustomCalendar from "./components/customCalendar/CustomCalendar";
 import Loader from "./components/loader/Loader";
+import ModalAccountComponent from "./components/modals/ModalAccountComponent";
 import ModalAddComponent from "./components/modals/ModalAddComponent";
-import ModalCreditCardComponent from "./components/modals/ModalCreditCardComponent";
+import ModalCarnetComponent from "./components/modals/ModalCarnetComponent";
 import ModalDeleteComponent from "./components/modals/ModalDeleteComponent";
 import ModalErrorComponent from "./components/modals/ModalErrorComponent";
 import { useLoader } from "./contexts/loaderContext";
-import { CreditCard, Slot } from "./types/types";
+import { Account, CarnetReservation, Slot } from "./types/types";
 
 const App: React.FC = () => {
   const { loading, setLoading } = useLoader();
 
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
 
   const [selectedSlot, setSelectedSlot] = useState<{
     start: Date;
     end: Date;
   } | null>(null);
-  const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+
+  const [carnetsReservation, setCarnetsReservation] = useState<
+    CarnetReservation[]
+  >([]);
 
   const [courtType, setCourtType] = useState<
     "indoor" | "outdoor" | "both" | null
@@ -38,10 +44,11 @@ const App: React.FC = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isCreditCardModalOpen, setIsCreditCardModalOpen] = useState(false);
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isCarnetReservationModalOpen, setIsCarnetReservationModalOpen] =
+    useState(false);
 
   const [slotToDelete, setSlotToDelete] = useState<Slot | null>(null);
-  const [cardToDelete, setCardToDelete] = useState<CreditCard | null>(null);
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -57,11 +64,11 @@ const App: React.FC = () => {
       .finally(() => setLoading(false));
   }, [setLoading]);
 
-  const fetchCreditCards = useCallback(async () => {
+  const fetchAccounts = useCallback(async () => {
     setLoading(true);
     try {
-      const cards = await getCreditCards();
-      setCreditCards(cards);
+      const accounts = await getAccounts();
+      setAccounts(accounts);
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
@@ -69,10 +76,23 @@ const App: React.FC = () => {
     }
   }, [setLoading]);
 
+  const fetchCarnets = useCallback(async () => {
+    setLoading(true);
+    try {
+      const carnets = await getCarnetsReservation();
+      setCarnetsReservation(carnets);
+    } catch (error: any) {
+      setErrorMessage(error?.message || "Une erreur inconnue est survenue");
+    } finally {
+      setLoading(false);
+    }
+  }, [setLoading]);
+
   useEffect(() => {
     fetchSlots();
-    fetchCreditCards();
-  }, [fetchSlots, fetchCreditCards]);
+    fetchAccounts();
+    fetchCarnets();
+  }, [fetchSlots, fetchAccounts, fetchCarnets]);
 
   const handleSlotSelect = (start: Date, end: Date) => {
     const isFullDay =
@@ -144,18 +164,11 @@ const App: React.FC = () => {
     setErrorMessage(null);
   };
 
-  const handleAddCard = async (card: Omit<CreditCard, "id">) => {
+  const handleAddAccount = async (account: Omit<Account, "id">) => {
     setLoading(true);
     try {
-      await addCreditCard(
-        card.name,
-        card.number,
-        card.cvc,
-        card.expiryMonth,
-        card.expiryYear,
-        card.isUsed
-      );
-      fetchCreditCards();
+      await addAccount(account.email, account.password, account.isUsed);
+      fetchAccounts();
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
@@ -163,11 +176,11 @@ const App: React.FC = () => {
     }
   };
 
-  const handleDeleteCard = async (id: string) => {
+  const handleDeleteAccount = async (id: string) => {
     setLoading(true);
     try {
-      await deleteCreditCard(id);
-      fetchCreditCards();
+      await deleteAccount(id);
+      fetchAccounts();
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
@@ -175,34 +188,39 @@ const App: React.FC = () => {
     }
   };
 
-  const handleEditCard = async (
+  const handleEditAccount = async (
     id: string,
-    updatedCard: Omit<CreditCard, "id">
+    updatedAccount: Omit<Account, "id">
   ) => {
     setLoading(true);
     try {
-      await updateCreditCard(
+      await updateAccount(
         id,
-        updatedCard.name,
-        updatedCard.number,
-        updatedCard.cvc,
-        updatedCard.expiryMonth,
-        updatedCard.expiryYear,
-        updatedCard.isUsed
+        updatedAccount.email,
+        updatedAccount.password,
+        updatedAccount.isUsed
       );
-      fetchCreditCards();
+      fetchAccounts();
     } catch (err: any) {
       setErrorMessage(err?.message);
     } finally {
       setLoading(false);
     }
   };
-  const handleOpenCreditCardModal = () => {
-    setIsCreditCardModalOpen(true);
+  const handleOpenAccountModal = () => {
+    setIsAccountModalOpen(true);
   };
 
-  const handleCloseCreditCardModal = () => {
-    setIsCreditCardModalOpen(false);
+  const handleCloseAccountModal = () => {
+    setIsAccountModalOpen(false);
+  };
+
+  const handleOpenCarnetReservationModal = () => {
+    setIsCarnetReservationModalOpen(true);
+  };
+
+  const handleCloseCarnetReservationModal = () => {
+    setIsCarnetReservationModalOpen(false);
   };
 
   return (
@@ -216,9 +234,17 @@ const App: React.FC = () => {
           variant="outlined"
           size="small"
           sx={{ marginBottom: "5px" }}
-          onClick={handleOpenCreditCardModal}
+          onClick={handleOpenAccountModal}
         >
-          Gérer les cartes de crédit
+          Gérer les comptes
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{ marginBottom: "5px" }}
+          onClick={handleOpenCarnetReservationModal}
+        >
+          Carnet de réservation
         </Button>
         <CustomCalendar
           slots={slots}
@@ -239,22 +265,27 @@ const App: React.FC = () => {
           onCancel={handleCancelDelete}
           slotToDelete={slotToDelete}
         />
-        <ModalCreditCardComponent
-          isOpen={isCreditCardModalOpen}
-          creditCards={creditCards}
-          currentCardId={selectedCard?.id || ""}
-          onAdd={handleAddCard}
-          onEdit={handleEditCard}
-          onDelete={handleDeleteCard}
-          onCancel={handleCloseCreditCardModal}
-          onSetCurrentCard={(id: string) => {
-            const card = creditCards.find((c) => c.id === id) || null;
-            setSelectedCard(card);
-            if (selectedCard) {
-              console.log(selectedCard);
-              handleEditCard(id, { ...selectedCard, isUsed: true });
+        <ModalAccountComponent
+          isOpen={isAccountModalOpen}
+          accounts={accounts}
+          currentAccountId={selectedAccount?.id || ""}
+          onAdd={handleAddAccount}
+          onEdit={handleEditAccount}
+          onDelete={handleDeleteAccount}
+          onCancel={handleCloseAccountModal}
+          onSetCurrentAccount={(id: string) => {
+            const account = accounts.find((c) => c.id === id) || null;
+            setSelectedAccount(account);
+            if (selectedAccount) {
+              console.log(selectedAccount);
+              handleEditAccount(id, { ...selectedAccount, isUsed: true });
             }
           }}
+        />
+        <ModalCarnetComponent
+          isOpen={isCarnetReservationModalOpen}
+          carnetsReservation={carnetsReservation}
+          onCancel={handleCloseCarnetReservationModal}
         />
         <ModalErrorComponent
           isOpen={!!errorMessage}

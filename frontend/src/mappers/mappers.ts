@@ -1,8 +1,8 @@
 import moment from "moment";
 
 import {
-  CreditCard,
-  CreditCardApi,
+  Account,
+  AccountApi,
   Slot,
   SlotApi,
   SlotCalendar
@@ -58,30 +58,20 @@ export const convertSlotToSlotApi = (slot: Slot): SlotApi => {
   };
 };
 
-export const convertCreditCardApiToCreditCard = (
-  creditCardApi: CreditCardApi
-): CreditCard => {
+export const convertAccountApiToAccount = (accountApi: AccountApi): Account => {
   return {
-    id: creditCardApi.id,
-    name: creditCardApi.name,
-    number: creditCardApi.number,
-    cvc: creditCardApi.cvc,
-    expiryMonth: creditCardApi.expiry_month,
-    expiryYear: creditCardApi.expiry_year,
-    isUsed: creditCardApi.is_used
+    id: accountApi.id,
+    email: accountApi.email,
+    password: accountApi.password,
+    isUsed: accountApi.is_used
   };
 };
 
-export const convertCreditCardToCreditCardApi = (
-  creditCard: CreditCard
-): CreditCardApi => {
+export const convertAccountToAccountApi = (account: Account): AccountApi => {
   return {
-    id: creditCard.id,
-    name: creditCard.name,
-    number: creditCard.number,
-    cvc: creditCard.cvc,
-    expiry_month: creditCard.expiryMonth,
-    expiry_year: creditCard.expiryYear,
-    is_used: creditCard.isUsed
+    id: account.id,
+    email: account.email,
+    password: account.password,
+    is_used: account.isUsed
   };
 };

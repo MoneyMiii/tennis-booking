@@ -157,7 +157,7 @@ def booking_tennis_cron():
     delete_slots_before_today()
 
 
-@app.route('/account', methods=['POST'])
+@app.route('/accounts', methods=['POST'])
 @flasgger.swag_from('swags/add_account.yml')
 def add_account_endpoint():
     try:
@@ -193,7 +193,7 @@ def add_account_endpoint():
         return create_response(False, str(e), status_code=500)
 
 
-@app.route('/account', methods=['GET'])
+@app.route('/accounts', methods=['GET'])
 @flasgger.swag_from('swags/get_accounts.yml')
 def get_accounts_endpoint():
     try:

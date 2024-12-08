@@ -1,9 +1,9 @@
 // api.ts (ou fichier contenant les fonctions API)
 import {
-  convertCreditCardApiToCreditCard,
+  convertAccountApiToAccount,
   convertSlotApiToSlot
 } from "../mappers/mappers";
-import { CreditCardApi, SlotApi } from "../types/types";
+import { AccountApi, CarnetReservation, SlotApi } from "../types/types";
 
 //const API_BASE_URL = "http://192.168.1.15:5000";
 const API_BASE_URL = "http://localhost:5000";
@@ -99,9 +99,9 @@ export const deleteSlot = async (id: string): Promise<string> => {
   }
 };
 
-export const getCreditCards = async () => {
+export const getAccounts = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/credit_cards`, {
+    const response = await fetch(`${API_BASE_URL}/accounts`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"
@@ -109,18 +109,17 @@ export const getCreditCards = async () => {
     });
 
     if (!response.ok) {
-      throw new Error("Erreur lors de la récupération des cartes de crédit");
+      throw new Error("Erreur lors de la récupération des comptes");
     }
 
     const data = await response.json();
     if (data.isSuccess) {
-      return data.data.map((creditCardApi: CreditCardApi) =>
-        convertCreditCardApiToCreditCard(creditCardApi)
+      return data.data.map((accountApi: AccountApi) =>
+        convertAccountApiToAccount(accountApi)
       );
     } else {
       throw new Error(
-        data.message ||
-          "Erreur inconnue lors de la récupération des cartes de crédit"
+        data.message || "Erreur inconnue lors de la récupération des comptes"
       );
     }
   } catch (error: any) {
@@ -129,26 +128,20 @@ export const getCreditCards = async () => {
   }
 };
 
-export const addCreditCard = async (
-  name: string,
-  number: string,
-  cvc: string,
-  expiryMonth: number,
-  expiryYear: number,
+export const addAccount = async (
+  email: string,
+  password: string,
   isUsed: boolean
 ): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/credit_cards`, {
+    const response = await fetch(`${API_BASE_URL}/accounts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        name,
-        number,
-        cvc,
-        expiry_month: expiryMonth,
-        expiry_year: expiryYear,
+        email,
+        password,
         is_used: isUsed
       })
     });
@@ -156,9 +149,7 @@ export const addCreditCard = async (
     const data = await response.json();
 
     if (!data.isSuccess) {
-      throw new Error(
-        data.message || "Erreur lors de l'ajout de la carte de crédit"
-      );
+      throw new Error(data.message || "Erreur lors de l'ajout d'un compte'");
     }
 
     return data.message;
@@ -168,27 +159,21 @@ export const addCreditCard = async (
   }
 };
 
-export const updateCreditCard = async (
+export const updateAccount = async (
   id: string,
-  name: string,
-  number: string,
-  cvc: string,
-  expiryMonth: number,
-  expiryYear: number,
+  email: string,
+  password: string,
   isUsed: boolean
 ): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/credit_cards/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        name,
-        number,
-        cvc,
-        expiry_month: expiryMonth,
-        expiry_year: expiryYear,
+        email,
+        password,
         is_used: isUsed
       })
     });
@@ -197,7 +182,7 @@ export const updateCreditCard = async (
 
     if (!data.isSuccess) {
       throw new Error(
-        data.message || "Erreur lors de la mise à jour de la carte de crédit"
+        data.message || "Erreur lors de la mise à jour d'un compte'"
       );
     }
 
@@ -208,9 +193,9 @@ export const updateCreditCard = async (
   }
 };
 
-export const deleteCreditCard = async (id: string): Promise<string> => {
+export const deleteAccount = async (id: string): Promise<string> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/credit_cards/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json"
@@ -221,11 +206,50 @@ export const deleteCreditCard = async (id: string): Promise<string> => {
 
     if (!data.isSuccess) {
       throw new Error(
-        data.message || "Erreur lors de la suppression de la carte de crédit"
+        data.message || "Erreur lors de la suppression d'un compte'"
       );
     }
 
     return data.message;
+  } catch (error: any) {
+    console.error("Erreur API:", error);
+    throw new Error(error.message || "Une erreur inconnue est survenue");
+  }
+};
+
+export const getCarnetsReservation = async (): Promise<CarnetReservation[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/remaining_hours`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        "Erreur lors de la récupération des carnets de réservation"
+      );
+    }
+
+    const data = await response.json();
+    if (data.isSuccess) {
+      const carnets: CarnetReservation[] = [
+        {
+          nom: "Couvert",
+          nombreDeCreneaux: data.data.court_couvert_hours
+        },
+        {
+          nom: "Découvert",
+          nombreDeCreneaux: data.data.court_decouvert_hours
+        }
+      ];
+      return carnets;
+    } else {
+      throw new Error(
+        data.message || "Erreur inconnue lors de la récupération des carnets"
+      );
+    }
   } catch (error: any) {
     console.error("Erreur API:", error);
     throw new Error(error.message || "Une erreur inconnue est survenue");

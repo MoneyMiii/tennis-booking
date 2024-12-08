@@ -26,16 +26,16 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 
-import { CreditCard } from "../../types/types";
+import { Account } from "../../types/types";
 
-interface ModalCreditCardProps {
+interface ModalAccountProps {
   isOpen: boolean;
-  creditCards: CreditCard[];
-  currentCardId: string | null;
-  onAdd: (card: Omit<CreditCard, "id">) => void;
-  onEdit: (id: string, card: Omit<CreditCard, "id">) => void;
+  accounts: Account[];
+  currentAccountId: string | null;
+  onAdd: (account: Omit<Account, "id">) => void;
+  onEdit: (id: string, account: Omit<Account, "id">) => void;
   onDelete: (id: string) => void;
-  onSetCurrentCard: (id: string) => void;
+  onSetCurrentAccount: (id: string) => void;
   onCancel: () => void;
 }
 
@@ -56,59 +56,52 @@ const modalStyles = {
   }
 };
 
-const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
+const ModalAccountComponent: React.FC<ModalAccountProps> = ({
   isOpen,
-  creditCards,
+  accounts,
   onAdd,
   onEdit,
   onDelete,
-  onSetCurrentCard,
+  onSetCurrentAccount,
   onCancel
 }) => {
-  const [editCard, setEditCard] = useState<CreditCard | null>(null);
+  const [editAccount, setEditAccount] = useState<Account | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
-      setEditCard(null); // Reset when modal closes
+      setEditAccount(null); // Reset when modal closes
     }
   }, [isOpen]);
 
   const handleAdd = () => {
-    const newCard: Omit<CreditCard, "id"> = {
-      name: "",
-      number: "",
-      expiryMonth: 1,
-      expiryYear: new Date().getFullYear(),
-      cvc: "",
+    const newAccount: Omit<Account, "id"> = {
+      email: "",
+      password: "",
       isUsed: false
     };
-    setEditCard({ ...newCard, id: "" });
+    setEditAccount({ ...newAccount, id: "" });
   };
 
   const handleSave = () => {
-    if (editCard) {
-      const { id, ...cardData } = editCard;
+    if (editAccount) {
+      const { id, ...accountData } = editAccount;
       if (id) {
-        onEdit(id, cardData);
+        onEdit(id, accountData);
       } else {
-        onAdd(cardData);
+        onAdd(accountData);
       }
-      setEditCard(null);
+      setEditAccount(null);
     }
   };
 
-  const columns: ColumnDef<CreditCard>[] = [
+  const columns: ColumnDef<Account>[] = [
     {
-      accessorKey: "name",
+      accessorKey: "email",
       header: "Nom"
     },
     {
-      accessorKey: "number",
-      header: "Numéro"
-    },
-    {
-      accessorFn: (row: CreditCard) => `${row.expiryMonth}/${row.expiryYear}`,
-      header: "Date d'expiration"
+      accessorKey: "password",
+      header: "Mot de passe"
     },
     {
       id: "current",
@@ -117,7 +110,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
         <input
           type="checkbox"
           checked={row.original.isUsed}
-          onChange={() => onSetCurrentCard(row.original.id)}
+          onChange={() => onSetCurrentAccount(row.original.id)}
         />
       )
     },
@@ -129,7 +122,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
           <Button
             variant="outlined"
             size="small"
-            onClick={() => setEditCard(row.original)}
+            onClick={() => setEditAccount(row.original)}
           >
             Modifier
           </Button>
@@ -148,8 +141,8 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
     }
   ];
 
-  const table = useReactTable<CreditCard>({
-    data: creditCards,
+  const table = useReactTable<Account>({
+    data: accounts,
     columns,
     getCoreRowModel: getCoreRowModel()
   });
@@ -157,7 +150,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
   return (
     <Modal isOpen={isOpen} onRequestClose={onCancel} style={modalStyles}>
       <Box sx={{ display: "flex", justifyContent: "center" }}>
-        <Typography variant="h4">Gérer les cartes de crédit</Typography>
+        <Typography variant="h4">Gérer les comptes</Typography>
       </Box>
       <Box
         sx={{
@@ -172,7 +165,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
           sx={{ marginBottom: "15px" }}
           onClick={handleAdd}
         >
-          Ajouter une carte
+          Ajouter un compte
         </Button>
       </Box>
 
@@ -182,7 +175,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
           <TableHead>
             {table
               .getHeaderGroups()
-              .map((headerGroup: HeaderGroup<CreditCard>) => (
+              .map((headerGroup: HeaderGroup<Account>) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
                     <TableCell
@@ -204,7 +197,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
 
           {/* Corps du tableau */}
           <TableBody>
-            {table.getRowModel().rows.map((row: Row<CreditCard>) => (
+            {table.getRowModel().rows.map((row: Row<Account>) => (
               <TableRow
                 key={row.id}
                 sx={{
@@ -224,7 +217,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
         </Table>
       </TableContainer>
 
-      {editCard && (
+      {editAccount && (
         <Box component="form">
           <Box
             sx={{
@@ -234,85 +227,30 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
             }}
           >
             <Typography variant="h5" gutterBottom>
-              {editCard.id ? "Modifier la carte" : "Ajouter une carte"}
+              {editAccount.id ? "Modifier le compte" : "Ajouter un compte"}
             </Typography>
           </Box>
 
           <TextField
-            label="Nom"
+            label="Email"
             variant="outlined"
             fullWidth
             margin="normal"
-            value={editCard.name}
-            onChange={(e) => setEditCard({ ...editCard, name: e.target.value })}
-          />
-
-          <TextField
-            label="Numéro"
-            type="number"
-            variant="outlined"
-            fullWidth
-            margin="normal"
-            value={editCard.number}
+            value={editAccount.email}
             onChange={(e) =>
-              setEditCard({ ...editCard, number: e.target.value })
+              setEditAccount({ ...editAccount, email: e.target.value })
             }
           />
 
-          <Stack direction="row" spacing={2} sx={{ marginY: 2 }}>
-            <TextField
-              label="Mois d'expiration"
-              type="number"
-              variant="outlined"
-              fullWidth
-              slotProps={{
-                input: {
-                  inputProps: {
-                    min: 1,
-                    max: 12
-                  }
-                }
-              }}
-              value={editCard.expiryMonth}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                if (value >= 1 && value <= 12) {
-                  setEditCard({ ...editCard, expiryMonth: value });
-                }
-              }}
-            />
-            <TextField
-              label="Année d'expiration"
-              type="number"
-              variant="outlined"
-              fullWidth
-              slotProps={{
-                input: {
-                  inputProps: {
-                    min: new Date().getFullYear()
-                  }
-                }
-              }}
-              value={editCard.expiryYear}
-              onChange={(e) => {
-                const currentYear = new Date().getFullYear();
-                if (parseInt(e.target.value, 10) >= currentYear) {
-                  setEditCard({
-                    ...editCard,
-                    expiryYear: Number(e.target.value)
-                  });
-                }
-              }}
-            />
-          </Stack>
-
           <TextField
-            label="CVC"
+            label="Mot de passe"
             variant="outlined"
             fullWidth
             margin="normal"
-            value={editCard.cvc}
-            onChange={(e) => setEditCard({ ...editCard, cvc: e.target.value })}
+            value={editAccount.password}
+            onChange={(e) =>
+              setEditAccount({ ...editAccount, password: e.target.value })
+            }
           />
 
           <Stack direction="row" spacing={2} sx={{ marginTop: 2 }}>
@@ -322,7 +260,7 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
             <Button
               variant="outlined"
               color="error"
-              onClick={() => setEditCard(null)}
+              onClick={() => setEditAccount(null)}
             >
               Annuler
             </Button>
@@ -344,4 +282,4 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
   );
 };
 
-export default ModalCreditCardComponent;
+export default ModalAccountComponent;

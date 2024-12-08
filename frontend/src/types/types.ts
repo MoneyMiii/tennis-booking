@@ -28,22 +28,21 @@ export interface Ressource {
   status?: "book" | "not_book" | "waiting";
 }
 
-export interface CreditCardApi {
+export interface AccountApi {
   id: string;
-  name: string;
-  number: string;
-  cvc: string;
-  expiry_month: number;
-  expiry_year: number;
+  email: string;
+  password: string;
   is_used: boolean;
 }
 
-export interface CreditCard {
+export interface Account {
   id: string;
-  name: string;
-  number: string;
-  cvc: string;
-  expiryMonth: number;
-  expiryYear: number;
+  email: string;
+  password: string;
   isUsed: boolean;
 }
+
+export type CarnetReservation = {
+  nom: string;
+  nombreDeCreneaux: number;
+};
