@@ -1,0 +1,49 @@
+tags:
+  - Booking Tennis
+produces:
+  - application/json
+responses:
+  200:
+    description: "Nombre d'heures restantes récupéré avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Heures restantes récupérées avec succès."
+        data:
+          type: object
+          properties:
+            court_decouvert_hours:
+              type: integer
+              description: "Nombre d'heures restantes pour les courts découverts"
+              example: 5
+            court_couvert_hours:
+              type: integer
+              description: "Nombre d'heures restantes pour les courts couverts"
+              example: 3
+  400:
+    description: "Aucun compte actif trouvé"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Aucun compte avec is_used = true trouvé."
+  500:
+    description: "Erreur interne du serveur"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: "Erreur interne."

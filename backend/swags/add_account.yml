@@ -1,0 +1,44 @@
+tags:
+  - Comptes
+consumes:
+  - application/json
+parameters:
+  - in: body
+    name: account
+    description: "Détails du compte à ajouter"
+    required: true
+    schema:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "Email"
+          example: "john.doe@mail.com"
+        password:
+          type: string
+          description: "Password"
+          example: "4g/******1D!"
+        is_used:
+          type: boolean
+          description: "Indique si le compte est celui utilisé"
+          example: false
+responses:
+  200:
+    description: "Compte ajouté avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Compte ajouté avec succès"
+        id:
+          type: string
+          description: "Identifiant unique du compte"
+          example: "123e4567-e89b-12d3-a456-426614174000"
+  400:
+    description: "Données invalides fournies"
+  500:
+    description: "Erreur interne du serveur"

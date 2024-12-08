@@ -1,0 +1,47 @@
+tags:
+  - Comptes
+consumes:
+  - application/json
+parameters:
+  - in: path
+    name: id
+    description: "Identifiant du compte à mettre à jour"
+    required: true
+    type: string
+    format: uuid
+    example: "123e4567-e89b-12d3-a456-426614174000"
+  - in: body
+    name: account
+    description: "Détails à mettre à jour pour le compte"
+    required: true
+    schema:
+      type: object
+      properties:
+        email:
+          type: string
+          description: "Email"
+          example: "john.doe@mail.com"
+        password:
+          type: string
+          description: "Mot de passe"
+          example: "4g/******1D!"
+        is_used:
+          type: boolean
+          description: "Indique si le compte est celui utilisé"
+          example: false
+responses:
+  200:
+    description: "Compte mis à jour avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Compte mis à jour avec succès"
+  400:
+    description: "Données invalides ou compte introuvable"
+  500:
+    description: "Erreur interne du serveur"

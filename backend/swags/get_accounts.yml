@@ -1,0 +1,36 @@
+tags:
+  - Comptes
+produces:
+  - application/json
+responses:
+  200:
+    description: "Liste des comptes récupérés avec succès"
+    schema:
+      type: object
+      properties:
+        isSuccess:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: "Identifiant du compte"
+                example: "58630af8-2da0-46e2-ba1b-fadefe19eba0"
+              email:
+                type: string
+                description: "Email"
+                example: "john.doe@mail.com"
+              password:
+                type: string
+                description: "Mot de passe"
+                example: "4g/******1D!"
+              is_used:
+                type: boolean
+                description: "Indique si le compte est celui utilisé"
+                example: false
+  500:
+    description: "Erreur interne du serveur"
