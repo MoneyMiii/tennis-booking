@@ -53,12 +53,11 @@ def navigate_to_carnet_page(driver):
             f"Erreur lors de la navigation vers la page de carnet : {str(e)}")
 
 
-def get_remaining_hours(driver, url, h4_text):
+def get_remaining_hours(driver, h4_text):
     """
     Récupère le nombre d'heures restantes pour un titre <h4> donné, ou retourne '0h' si non trouvé.
     """
     try:
-        driver.get(url)
         h4_elements = driver.find_elements(By.TAG_NAME, 'h4')
 
         for h4 in h4_elements:
@@ -92,12 +91,10 @@ def get_remaining_time(account):
         # Récupérer les heures pour les courts
         court_decouvert_hours = get_remaining_hours(
             driver,
-            'https://tennis.paris.fr/tennis/jsp/site/Portal.jsp?page=profil&view=carnet_reservation',
             "Tarif plein - Court découvert :"
         )
         court_couvert_hours = get_remaining_hours(
             driver,
-            'https://tennis.paris.fr/tennis/jsp/site/Portal.jsp?page=profil&view=carnet_reservation',
             "Tarif plein - Court couvert :"
         )
 
