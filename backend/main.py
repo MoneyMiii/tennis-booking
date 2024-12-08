@@ -84,8 +84,7 @@ def add_slot_endpoint():
 
             return create_response(
                 True,
-                f"Créneau ajouté avec le statut '{status}'",
-                data={"status": status}
+                f"Créneau ajouté avec le statut '{status}'"
             )
     except Exception as e:
         return create_response(False, str(e), status_code=500)
