@@ -5,6 +5,7 @@ import {
 } from "../mappers/mappers";
 import { CreditCardApi, SlotApi } from "../types/types";
 
+//const API_BASE_URL = "http://192.168.1.15:5000";
 const API_BASE_URL = "http://localhost:5000";
 
 export const getSlots = async () => {

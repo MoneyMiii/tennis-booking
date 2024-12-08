@@ -4,6 +4,20 @@ import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 
 import {
+  Box,
+  Button,
+  Paper,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography
+} from "@mui/material";
+import {
   ColumnDef,
   HeaderGroup,
   Row,
@@ -33,7 +47,7 @@ const modalStyles = {
     bottom: "auto",
     marginRight: "-50%",
     transform: "translate(-50%, -50%)",
-    width: "600px",
+    width: "66vw",
     padding: "20px",
     backgroundColor: "#fff",
     borderRadius: "10px",
@@ -111,12 +125,25 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <div>
-          <button onClick={() => setEditCard(row.original)}>Modifier</button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => setEditCard(row.original)}
+          >
+            Modifier
+          </Button>
           {!row.original.isUsed && (
-            <button onClick={() => onDelete(row.original.id)}>Supprimer</button>
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              onClick={() => onDelete(row.original.id)}
+            >
+              Supprimer
+            </Button>
           )}
-        </div>
+        </Stack>
       )
     }
   ];
@@ -129,114 +156,189 @@ const ModalCreditCardComponent: React.FC<ModalCreditCardProps> = ({
 
   return (
     <Modal isOpen={isOpen} onRequestClose={onCancel} style={modalStyles}>
-      <h2>Gérer les cartes de crédit</h2>
-      <div>
-        <button onClick={handleAdd}>Ajouter une carte</button>
-      </div>
+      <Box sx={{ display: "flex", justifyContent: "center" }}>
+        <Typography variant="h4">Gérer les cartes de crédit</Typography>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "15px"
+        }}
+      >
+        <Button
+          size="small"
+          variant="outlined"
+          sx={{ marginBottom: "15px" }}
+          onClick={handleAdd}
+        >
+          Ajouter une carte
+        </Button>
+      </Box>
 
-      <table>
-        <thead>
-          {table
-            .getHeaderGroups()
-            .map((headerGroup: HeaderGroup<CreditCard>) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row: Row<CreditCard>) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
+      <TableContainer component={Paper} sx={{ maxHeight: 400 }}>
+        <Table stickyHeader>
+          {/* En-tête du tableau */}
+          <TableHead>
+            {table
+              .getHeaderGroups()
+              .map((headerGroup: HeaderGroup<CreditCard>) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableCell
+                      key={header.id}
+                      align="center"
+                      sx={{ fontWeight: "bold", backgroundColor: "#f5f5f5" }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+          </TableHead>
+
+          {/* Corps du tableau */}
+          <TableBody>
+            {table.getRowModel().rows.map((row: Row<CreditCard>) => (
+              <TableRow
+                key={row.id}
+                sx={{
+                  "&:nth-of-type(odd)": { backgroundColor: "#f9f9f9" },
+                  "&:nth-of-type(even)": { backgroundColor: "#ffffff" },
+                  "&:hover": { backgroundColor: "#f1f1f1" }
+                }}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} align="center">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
 
       {editCard && (
-        <div className="edit-card-form">
-          <h3>{editCard.id ? "Modifier la carte" : "Ajouter une carte"}</h3>
-          <div>
-            <label>Nom :</label>
-            <input
-              type="text"
-              value={editCard.name}
-              onChange={(e) =>
-                setEditCard({ ...editCard, name: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label>Numéro :</label>
-            <input
-              type="text"
-              value={editCard.number}
-              onChange={(e) =>
-                setEditCard({ ...editCard, number: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label>Mois d'expiration :</label>
-            <input
+        <Box component="form">
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "center",
+              marginTop: "10px"
+            }}
+          >
+            <Typography variant="h5" gutterBottom>
+              {editCard.id ? "Modifier la carte" : "Ajouter une carte"}
+            </Typography>
+          </Box>
+
+          <TextField
+            label="Nom"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={editCard.name}
+            onChange={(e) => setEditCard({ ...editCard, name: e.target.value })}
+          />
+
+          <TextField
+            label="Numéro"
+            type="number"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={editCard.number}
+            onChange={(e) =>
+              setEditCard({ ...editCard, number: e.target.value })
+            }
+          />
+
+          <Stack direction="row" spacing={2} sx={{ marginY: 2 }}>
+            <TextField
+              label="Mois d'expiration"
               type="number"
-              min={1}
-              max={12}
+              variant="outlined"
+              fullWidth
+              slotProps={{
+                input: {
+                  inputProps: {
+                    min: 1,
+                    max: 12
+                  }
+                }
+              }}
               value={editCard.expiryMonth}
-              onChange={(e) =>
-                setEditCard({
-                  ...editCard,
-                  expiryMonth: Number(e.target.value)
-                })
-              }
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                if (value >= 1 && value <= 12) {
+                  setEditCard({ ...editCard, expiryMonth: value });
+                }
+              }}
             />
-          </div>
-          <div>
-            <label>Année d'expiration :</label>
-            <input
+            <TextField
+              label="Année d'expiration"
               type="number"
-              min={new Date().getFullYear()}
+              variant="outlined"
+              fullWidth
+              slotProps={{
+                input: {
+                  inputProps: {
+                    min: new Date().getFullYear()
+                  }
+                }
+              }}
               value={editCard.expiryYear}
-              onChange={(e) =>
-                setEditCard({
-                  ...editCard,
-                  expiryYear: Number(e.target.value)
-                })
-              }
+              onChange={(e) => {
+                const currentYear = new Date().getFullYear();
+                if (parseInt(e.target.value, 10) >= currentYear) {
+                  setEditCard({
+                    ...editCard,
+                    expiryYear: Number(e.target.value)
+                  });
+                }
+              }}
             />
-          </div>
-          <div>
-            <label>CVC :</label>
-            <input
-              type="text"
-              value={editCard.cvc}
-              onChange={(e) =>
-                setEditCard({ ...editCard, cvc: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <button onClick={handleSave}>Enregistrer</button>
-            <button onClick={() => setEditCard(null)}>Annuler</button>
-          </div>
-        </div>
+          </Stack>
+
+          <TextField
+            label="CVC"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={editCard.cvc}
+            onChange={(e) => setEditCard({ ...editCard, cvc: e.target.value })}
+          />
+
+          <Stack direction="row" spacing={2} sx={{ marginTop: 2 }}>
+            <Button variant="contained" color="success" onClick={handleSave}>
+              Enregistrer
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => setEditCard(null)}
+            >
+              Annuler
+            </Button>
+          </Stack>
+        </Box>
       )}
 
       <div>
-        <button onClick={onCancel}>Fermer</button>
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{ marginTop: "15px" }}
+          onClick={onCancel}
+        >
+          Fermer
+        </Button>
       </div>
     </Modal>
   );

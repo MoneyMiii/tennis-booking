@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 
+import { Box, Button, Typography } from "@mui/material";
+
 import {
   addCreditCard,
   addSlot,
@@ -207,10 +209,17 @@ const App: React.FC = () => {
     <div>
       {loading && <Loader />}
       <div style={{ padding: "20px" }}>
-        <h1>Calendrier de Réservation</h1>
-        <button onClick={handleOpenCreditCardModal}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+          <Typography variant="h3">Calendrier de Réservation</Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          size="small"
+          sx={{ marginBottom: "5px" }}
+          onClick={handleOpenCreditCardModal}
+        >
           Gérer les cartes de crédit
-        </button>
+        </Button>
         <CustomCalendar
           slots={slots}
           onSlotSelect={handleSlotSelect}
@@ -228,6 +237,7 @@ const App: React.FC = () => {
           isOpen={isDeleteModalOpen}
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
+          slotToDelete={slotToDelete}
         />
         <ModalCreditCardComponent
           isOpen={isCreditCardModalOpen}

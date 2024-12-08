@@ -1,7 +1,16 @@
-import "./ModalComponent.css";
-
 import React from "react";
 import Modal from "react-modal";
+
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
+  Radio,
+  RadioGroup,
+  Typography
+} from "@mui/material";
 
 interface ModalAddComponentProps {
   isOpen: boolean;
@@ -39,49 +48,54 @@ const ModalAddComponent: React.FC<ModalAddComponentProps> = ({
 }) => {
   if (!selectedSlot) return null;
 
+  const handleRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value as "indoor" | "outdoor" | "both";
+    onSetCourtType(value);
+  };
+
   return (
     <Modal isOpen={isOpen} onRequestClose={onCancel} style={modalStyles}>
-      <h2>Sélectionner le type de court</h2>
-      <div>
-        <label>
-          <input
-            type="radio"
+      <Box sx={{ padding: 2 }}>
+        <Typography variant="h5" sx={{ marginBottom: 2, textAlign: "center" }}>
+          Sélectionner le type de court
+        </Typography>
+
+        <FormControl component="fieldset" fullWidth>
+          <FormLabel component="legend">Choisissez le type de court</FormLabel>
+          <RadioGroup
+            aria-label="courtType"
             name="courtType"
-            value="indoor"
-            checked={courtType === "indoor"}
-            onChange={() => onSetCourtType("indoor")}
-          />
-          Indoor
-        </label>
-      </div>
-      <div>
-        <label>
-          <input
-            type="radio"
-            name="courtType"
-            value="outdoor"
-            checked={courtType === "outdoor"}
-            onChange={() => onSetCourtType("outdoor")}
-          />
-          Outdoor
-        </label>
-      </div>
-      <div>
-        <label>
-          <input
-            type="radio"
-            name="courtType"
-            value="both"
-            checked={courtType === "both"}
-            onChange={() => onSetCourtType("both")}
-          />
-          Both
-        </label>
-      </div>
-      <div>
-        <button onClick={onConfirm}>Valider</button>
-        <button onClick={onCancel}>Annuler</button>
-      </div>
+            value={courtType}
+            onChange={handleRadioChange}
+          >
+            <FormControlLabel
+              value="indoor"
+              control={<Radio />}
+              label="Indoor"
+            />
+            <FormControlLabel
+              value="outdoor"
+              control={<Radio />}
+              label="Outdoor"
+            />
+            <FormControlLabel value="both" control={<Radio />} label="Both" />
+          </RadioGroup>
+        </FormControl>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 3
+          }}
+        >
+          <Button variant="outlined" color="success" onClick={onConfirm}>
+            Valider
+          </Button>
+          <Button variant="outlined" color="error" onClick={onCancel}>
+            Annuler
+          </Button>
+        </Box>
+      </Box>
     </Modal>
   );
 };

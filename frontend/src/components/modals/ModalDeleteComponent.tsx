@@ -3,10 +3,15 @@ import "./ModalComponent.css";
 import React from "react";
 import Modal from "react-modal";
 
+import { Button, Stack, Typography } from "@mui/material";
+
+import { Slot } from "../../types/types";
+
 interface ModalDeleteComponentProps {
   isOpen: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  slotToDelete: Slot | null;
 }
 
 const modalStyles = {
@@ -17,7 +22,7 @@ const modalStyles = {
     bottom: "auto",
     marginRight: "-50%",
     transform: "translate(-50%, -50%)",
-    width: "300px",
+    width: "30vw",
     padding: "20px",
     backgroundColor: "#fff",
     borderRadius: "10px",
@@ -29,15 +34,28 @@ const modalStyles = {
 const ModalDeleteComponent: React.FC<ModalDeleteComponentProps> = ({
   isOpen,
   onConfirm,
-  onCancel
+  onCancel,
+  slotToDelete
 }) => {
+  console.log(slotToDelete);
   return (
     <Modal isOpen={isOpen} onRequestClose={onCancel} style={modalStyles}>
-      <h2>Supprimer ce créneau ?</h2>
-      <div>
-        <button onClick={onConfirm}>Confirmer</button>
-        <button onClick={onCancel}>Annuler</button>
-      </div>
+      <Typography variant="h5" sx={{ marginBottom: 2, textAlign: "center" }}>
+        Voulez vous supprimer le créneau du {slotToDelete?.date} de{" "}
+        {slotToDelete?.start}h à {slotToDelete?.end}h.
+      </Typography>
+      <Stack
+        direction="row"
+        spacing={1}
+        sx={{ justifyContent: "center", marginTop: 2 }}
+      >
+        <Button variant="outlined" color="success" onClick={onConfirm}>
+          Confirmer
+        </Button>
+        <Button variant="outlined" color="error" onClick={onCancel}>
+          Annuler
+        </Button>
+      </Stack>
     </Modal>
   );
 };
